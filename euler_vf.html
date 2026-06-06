@@ -256,6 +256,12 @@
   .confirm-modal-sub { font-size:13px; color:var(--text-muted); line-height:1.5; }
   .confirm-modal-dealer { font-weight:600; color:var(--text); }
   .confirm-modal-footer { padding:16px 24px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:center; }
+  .fip-view-field { font-size:13px;color:var(--text);padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);min-height:36px;line-height:1.4; }
+  .fip-product-btn { display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:11px;font-weight:600;font-family:'DM Mono',monospace;cursor:pointer;transition:all 0.12s; }
+  .fip-product-btn:hover { box-shadow:var(--shadow); }
+  .fip-product-btn.defined { border-color:var(--cat-b-border);background:var(--cat-b-bg);color:var(--cat-b); }
+  .fip-product-btn.na { border-color:var(--border);background:var(--surface2);color:var(--text-hint); }
+  .fip-product-btn.undefined { border-color:var(--border);background:var(--surface);color:var(--text-muted); }
 </style>
 </head>
 <body>
@@ -271,6 +277,7 @@
       <button class="nav-btn" id="navCoverage" onclick="switchPage('coverage')">Coverage Gaps</button>
       <button class="nav-btn" id="navFinancier" onclick="switchPage('financier')">FI Master List</button>
       <button class="nav-btn" id="navDealerMaster" onclick="switchPage('dealermaster')">Dealer Master List</button>
+      <button class="nav-btn" id="navFIPolicy" onclick="switchPage('fipolicy')">FI Policy</button>
     </nav>
   </div>
   <div class="save-indicator">
@@ -612,6 +619,271 @@
   </div>
 </div>
 
+<!-- ════════════════════════════════════════════════════════════
+     PAGE 5 — FI POLICY
+════════════════════════════════════════════════════════════ -->
+<div class="page" id="pageFIPolicy">
+<div class="container">
+  <div class="page-header">
+    <div class="page-title">FI Policy</div>
+    <div class="page-sub">Define and manage product-level financing policies for each financier.</div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-bar" id="fiPolicySummary"></div>
+
+  <!-- Filter bar -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);">
+    <input type="text" class="search-box" id="fiPolicySearch" placeholder="Search financier..." oninput="renderFIPolicy()" style="width:200px;">
+    <select class="filter-select" id="fiPolicyFilterCategory" onchange="renderFIPolicy()"><option value="">All Categories</option></select>
+    <select class="filter-select" id="fiPolicyFilterStatus" onchange="renderFIPolicy()"><option value="">All Statuses</option></select>
+    <button class="btn btn-secondary btn-sm" onclick="clearFIPolicyFilters()">✕ Clear</button>
+  </div>
+
+  <div id="fiPolicyTable"></div>
+</div>
+</div>
+
+<!-- ── FI POLICY MODAL ── -->
+<div class="modal-overlay" id="fiPolicyModalOverlay" style="z-index:250;">
+  <div class="modal" style="max-width:560px;position:relative;">
+
+    <!-- Close button -->
+    <button onclick="closeFIPolicyModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-hint);line-height:1;z-index:1;">×</button>
+
+    <!-- Modal Header -->
+    <div class="modal-header" style="padding-right:44px;">
+      <div>
+        <div class="modal-title" id="fiPolicyModalTitle">Policy</div>
+        <div class="modal-sub" id="fiPolicyModalSub"></div>
+      </div>
+    </div>
+
+    <!-- Segment tab switcher -->
+    <div style="display:flex;border-bottom:2px solid var(--border);background:var(--surface2);">
+      <button id="fip_tab_ind" onclick="switchFIPTab('ind')" style="flex:1;padding:12px 16px;border:none;background:var(--surface);border-bottom:2px solid var(--accent);font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;margin-bottom:-2px;transition:all 0.15s;">🧑 Individual</button>
+      <button id="fip_tab_co"  onclick="switchFIPTab('co')"  style="flex:1;padding:12px 16px;border:none;background:none;border-bottom:2px solid transparent;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;margin-bottom:-2px;transition:all 0.15s;">🏢 Company Owned</button>
+    </div>
+
+    <div class="modal-body" style="padding:0;max-height:65vh;overflow-y:auto;">
+
+      <!-- ── INDIVIDUAL PANEL ── -->
+      <div id="fip_panel_ind">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surface2);border-bottom:1px solid var(--border);">
+          <span style="font-size:12px;color:var(--text-muted);">Applicable for Individual customers?</span>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
+            <div id="fip_ind_toggleLabel" style="font-size:11px;font-weight:600;color:var(--cat-d);">Not Applicable</div>
+            <div id="fip_ind_toggleTrack" onclick="toggleFIPolicySegment('ind')" style="width:40px;height:22px;border-radius:11px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
+              <div id="fip_ind_toggleThumb" style="width:18px;height:18px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+            </div>
+          </label>
+        </div>
+        <div id="fip_ind_body" style="padding:16px 20px;opacity:0.4;pointer-events:none;">
+          <div id="fip_ind_hint" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px dashed var(--border);border-radius:8px;margin-bottom:14px;font-size:12px;color:var(--text-muted);">
+            ↑ Enable the toggle above to define policy for Individual customers
+          </div>
+          
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Minimum CIBIL <span style="color:var(--flag);">*</span></label>
+      <div id="fip_ind_minCibil_view" class="fip-view-field">—</div>
+      <input type="number" class="form-select" id="fip_ind_minCibil" placeholder="300" style="display:none;" min="0">
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Max Loan Tenure (months) <span style="color:var(--flag);">*</span></label>
+      <div id="fip_ind_maxTenure_view" class="fip-view-field">—</div>
+      <input type="number" class="form-select" id="fip_ind_maxTenure" placeholder="e.g. 48" style="display:none;" min="0">
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Max Loan Amount <span style="color:var(--flag);">*</span></label>
+      <div id="fip_ind_maxLoan_view" class="fip-view-field">—</div>
+      <div id="fip_ind_maxLoan_edit_wrap" style="display:none;position:relative;">
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">₹</span>
+        <input type="number" class="form-select" id="fip_ind_maxLoan" placeholder="0" style="padding-left:22px;" min="0">
+      </div>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Minimum IRR Offered <span style="color:var(--flag);">*</span></label>
+      <div id="fip_ind_minIrr_view" class="fip-view-field">—</div>
+      <div id="fip_ind_minIrr_edit_wrap" style="display:none;position:relative;">
+        <input type="number" class="form-select" id="fip_ind_minIrr" placeholder="0.00" min="0" max="100" step="0.01" style="padding-right:28px;">
+        <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">%</span>
+      </div>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Processing Fee <span style="color:var(--flag);">*</span></label>
+      <div id="fip_ind_processingFee_view" class="fip-view-field">—</div>
+      <div id="fip_ind_processingFee_edit_wrap" style="display:none;position:relative;">
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">₹</span>
+        <input type="number" class="form-select" id="fip_ind_processingFee" placeholder="0" style="padding-left:22px;" min="0">
+      </div>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Residence Address Criteria <span style="color:var(--flag);">*</span></label>
+      <div id="fip_ind_residence_view" class="fip-view-field">—</div>
+      <select class="form-select" id="fip_ind_residence" style="display:none;"><option value="">— Select —</option><option value="Rented" >Rented</option><option value="Own" >Own</option><option value="Either Scenario" >Either Scenario</option></select>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Guarantor Required <span style="color:var(--flag);">*</span></label>
+      <div id="fip_ind_guarantor_view" class="fip-view-field">—</div>
+      <select class="form-select" id="fip_ind_guarantor" style="display:none;"><option value="">— Select —</option><option value="Yes" >Yes</option><option value="No" >No</option><option value="Either Scenario" >Either Scenario</option></select>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">L6M Bank Statement Required <span style="color:var(--flag);">*</span></label>
+      <div id="fip_ind_bankStatement_view" class="fip-view-field">—</div>
+      <select class="form-select" id="fip_ind_bankStatement" style="display:none;"><option value="">— Select —</option><option value="Yes" >Yes</option><option value="No" selected>No</option><option value="Either Scenario">Either Scenario</option></select>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">License Type <span style="color:var(--flag);">*</span></label>
+      <div id="fip_ind_licenseType_view" class="fip-view-field">—</div>
+      <select class="form-select" id="fip_ind_licenseType" style="display:none;"><option value="">— Select —</option><option value="DL" >DL</option><option value="LLR" >LLR</option><option value="Either Scenario" >Either Scenario</option></select>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Provides Loan to NTC <span style="color:var(--flag);">*</span></label>
+      <div id="fip_ind_ntc_view" class="fip-view-field" style="display:none;">No</div>
+      <div id="fip_ind_ntc_wrap" style="display:flex;align-items:center;gap:10px;padding:6px 0;">
+        <div id="fip_ind_ntc_label" style="font-size:12px;font-weight:600;color:var(--cat-d);">No</div>
+        <div id="fip_ind_ntc_track" onclick="toggleFIPYN('fip_ind_ntc')" style="width:36px;height:20px;border-radius:10px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
+          <div id="fip_ind_ntc_thumb" style="width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+        </div>
+      </div>
+    </div>
+          </div>
+          <div class="form-group" style="margin-bottom:8px;">
+            <label class="form-label">Remarks</label>
+            <div id="fip_ind_remarks_view" class="fip-view-field" style="min-height:40px;">—</div>
+            <textarea class="form-select" id="fip_ind_remarks" rows="2" style="display:none;resize:vertical;" placeholder="Optional notes..."></textarea>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:4px;">
+            <button class="btn btn-secondary btn-sm" id="fip_ind_editBtn" onclick="enterFIPSegmentEditMode('ind')" style="display:none;">✏ Edit</button>
+            <button class="btn btn-primary btn-sm" id="fip_ind_saveBtn" onclick="saveFIPSegment('ind')" style="display:none;">Save Changes</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── COMPANY OWNED PANEL ── -->
+      <div id="fip_panel_co" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surface2);border-bottom:1px solid var(--border);">
+          <span style="font-size:12px;color:var(--text-muted);">Applicable for Company Owned customers?</span>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
+            <div id="fip_co_toggleLabel" style="font-size:11px;font-weight:600;color:var(--cat-d);">Not Applicable</div>
+            <div id="fip_co_toggleTrack" onclick="toggleFIPolicySegment('co')" style="width:40px;height:22px;border-radius:11px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
+              <div id="fip_co_toggleThumb" style="width:18px;height:18px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+            </div>
+          </label>
+        </div>
+        <div id="fip_co_body" style="padding:16px 20px;opacity:0.4;pointer-events:none;">
+          <div id="fip_co_hint" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px dashed var(--border);border-radius:8px;margin-bottom:14px;font-size:12px;color:var(--text-muted);">
+            ↑ Enable the toggle above to define policy for Company Owned customers
+          </div>
+          
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Minimum CIBIL <span style="color:var(--flag);">*</span></label>
+      <div id="fip_co_minCibil_view" class="fip-view-field">—</div>
+      <input type="number" class="form-select" id="fip_co_minCibil" placeholder="300" style="display:none;" min="0">
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Max Loan Tenure (months) <span style="color:var(--flag);">*</span></label>
+      <div id="fip_co_maxTenure_view" class="fip-view-field">—</div>
+      <input type="number" class="form-select" id="fip_co_maxTenure" placeholder="e.g. 48" style="display:none;" min="0">
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Max Loan Amount <span style="color:var(--flag);">*</span></label>
+      <div id="fip_co_maxLoan_view" class="fip-view-field">—</div>
+      <div id="fip_co_maxLoan_edit_wrap" style="display:none;position:relative;">
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">₹</span>
+        <input type="number" class="form-select" id="fip_co_maxLoan" placeholder="0" style="padding-left:22px;" min="0">
+      </div>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Minimum IRR Offered <span style="color:var(--flag);">*</span></label>
+      <div id="fip_co_minIrr_view" class="fip-view-field">—</div>
+      <div id="fip_co_minIrr_edit_wrap" style="display:none;position:relative;">
+        <input type="number" class="form-select" id="fip_co_minIrr" placeholder="0.00" min="0" max="100" step="0.01" style="padding-right:28px;">
+        <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">%</span>
+      </div>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Company Property <span style="color:var(--flag);">*</span></label>
+      <div id="fip_co_companyProperty_view" class="fip-view-field">—</div>
+      <select class="form-select" id="fip_co_companyProperty" style="display:none;"><option value="">— Select —</option><option value="Rented" >Rented</option><option value="Own" >Own</option><option value="Either Scenario" >Either Scenario</option></select>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Personal Residence <span style="color:var(--flag);">*</span></label>
+      <div id="fip_co_personalResidence_view" class="fip-view-field">—</div>
+      <select class="form-select" id="fip_co_personalResidence" style="display:none;"><option value="">— Select —</option><option value="Rented" >Rented</option><option value="Own" >Own</option><option value="Either Scenario" >Either Scenario</option></select>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Guarantor Required <span style="color:var(--flag);">*</span></label>
+      <div id="fip_co_guarantor_view" class="fip-view-field">—</div>
+      <select class="form-select" id="fip_co_guarantor" style="display:none;"><option value="">— Select —</option><option value="Yes" >Yes</option><option value="No" >No</option><option value="Either Scenario" >Either Scenario</option></select>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Annual Turnover <span style="color:var(--flag);">*</span></label>
+      <div id="fip_co_annualTurnover_view" class="fip-view-field">—</div>
+      <div id="fip_co_annualTurnover_edit_wrap" style="display:none;position:relative;">
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">₹</span>
+        <input type="number" class="form-select" id="fip_co_annualTurnover" placeholder="0" style="padding-left:22px;" min="0">
+      </div>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Vintage (years)</label>
+      <div id="fip_co_vintage_view" class="fip-view-field">—</div>
+      <input type="number" class="form-select" id="fip_co_vintage" placeholder="e.g. 2" style="display:none;" min="0">
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Existing Fleet <span style="color:var(--flag);">*</span></label>
+      <div id="fip_co_existingFleet_view" class="fip-view-field" style="display:none;">No</div>
+      <div id="fip_co_existingFleet_wrap" style="display:flex;align-items:center;gap:10px;padding:6px 0;">
+        <div id="fip_co_existingFleet_label" style="font-size:12px;font-weight:600;color:var(--cat-d);">No</div>
+        <div id="fip_co_existingFleet_track" onclick="toggleFIPYN('fip_co_existingFleet')" style="width:36px;height:20px;border-radius:10px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
+          <div id="fip_co_existingFleet_thumb" style="width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+        </div>
+      </div>
+    </div>
+          </div>
+          <!-- Existing Fleet Size (conditional) -->
+          <div id="fip_co_fleetSizeRow" style="display:none;margin-bottom:12px;">
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Existing Fleet Size <span style="color:var(--flag);">*</span></label>
+      <div id="fip_co_fleetSize_view" class="fip-view-field">—</div>
+      <input type="number" class="form-select" id="fip_co_fleetSize" placeholder="e.g. 5" style="display:none;" min="0">
+    </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Provides Loan to NTC <span style="color:var(--flag);">*</span></label>
+      <div id="fip_co_ntc_view" class="fip-view-field" style="display:none;">No</div>
+      <div id="fip_co_ntc_wrap" style="display:flex;align-items:center;gap:10px;padding:6px 0;">
+        <div id="fip_co_ntc_label" style="font-size:12px;font-weight:600;color:var(--cat-d);">No</div>
+        <div id="fip_co_ntc_track" onclick="toggleFIPYN('fip_co_ntc')" style="width:36px;height:20px;border-radius:10px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
+          <div id="fip_co_ntc_thumb" style="width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+        </div>
+      </div>
+    </div>
+          </div>
+          <div class="form-group" style="margin-bottom:8px;">
+            <label class="form-label">Remarks</label>
+            <div id="fip_co_remarks_view" class="fip-view-field" style="min-height:40px;">—</div>
+            <textarea class="form-select" id="fip_co_remarks" rows="2" style="display:none;resize:vertical;" placeholder="Optional notes..."></textarea>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:4px;">
+            <button class="btn btn-secondary btn-sm" id="fip_co_editBtn" onclick="enterFIPSegmentEditMode('co')" style="display:none;">✏ Edit</button>
+            <button class="btn btn-primary btn-sm" id="fip_co_saveBtn" onclick="saveFIPSegment('co')" style="display:none;">Save Changes</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeFIPolicyModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── ADD/EDIT FINANCIER MODAL ── -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
@@ -734,7 +1006,7 @@ const CATS = ["A","B","C","D"];
 const CAT_COLORS = { A:'var(--cat-a)', B:'var(--cat-b)', C:'var(--cat-c)', D:'var(--cat-d)' };
 const STORAGE_KEY = "euler_vf_v2";
 
-let state = { dealers: DEALERS_RAW, financiers: FINANCIERS_RAW, financiersMeta: FINANCIERS_META.map(m=>({...m})), mapping: {}, addedDealers: [], dealersMaster: [] };
+let state = { dealers: DEALERS_RAW, financiers: FINANCIERS_RAW, financiersMeta: FINANCIERS_META.map(m=>({...m})), mapping: {}, addedDealers: [], dealersMaster: [], fiPolicy: {} };
 let modalContext = null;
 let openDealerCards = new Set();
 let openGapCards = new Set();
@@ -750,7 +1022,8 @@ function saveState() {
       addedDealers: state.addedDealers,
       financiers: state.financiers,
       financiersMeta: state.financiersMeta,
-      dealersMaster: state.dealersMaster
+      dealersMaster: state.dealersMaster,
+      fiPolicy: state.fiPolicy
     }));
     document.getElementById("saveDot").style.background = "#4ade80";
     document.getElementById("saveLabel").textContent = "Saved · " + new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
@@ -767,6 +1040,7 @@ function loadState() {
         if (parsed.financiers) state.financiers = parsed.financiers;
         if (parsed.financiersMeta) state.financiersMeta = parsed.financiersMeta;
         if (parsed.dealersMaster && parsed.dealersMaster.length) state.dealersMaster = parsed.dealersMaster;
+        if (parsed.fiPolicy) state.fiPolicy = parsed.fiPolicy;
       } else {
         state.mapping = parsed;
         state.addedDealers = [];
@@ -794,13 +1068,16 @@ function switchPage(page) {
   document.getElementById("pageCoverage").classList.toggle("active", page === 'coverage');
   document.getElementById("pageFinancier").classList.toggle("active", page === 'financier');
   document.getElementById("pageDealerMaster").classList.toggle("active", page === 'dealermaster');
+  document.getElementById("pageFIPolicy").classList.toggle("active", page === 'fipolicy');
   document.getElementById("navDealer").classList.toggle("active", page === 'dealer');
   document.getElementById("navCoverage").classList.toggle("active", page === 'coverage');
   document.getElementById("navFinancier").classList.toggle("active", page === 'financier');
   document.getElementById("navDealerMaster").classList.toggle("active", page === 'dealermaster');
+  document.getElementById("navFIPolicy").classList.toggle("active", page === 'fipolicy');
   if (page === 'coverage') { renderSummary(); renderGap(); }
   if (page === 'financier') { renderFinancierMaster(); }
   if (page === 'dealermaster') { renderDealerMaster(); }
+  if (page === 'fipolicy') { renderFIPolicy(); }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1062,7 +1339,7 @@ function buildProductConfigHTML(existingProducts) {
         <input type="checkbox" id="pen_${p.key}" onchange="toggleProductRow('${p.key}')" ${enabled?'checked':''}>
         <span class="product-config-name">${p.label}</span>
       </div>
-      <div class="product-config-cats" id="pcats_${p.key}" style="display:${enabled?'flex':'none'}">${catsHTML}</div>
+      <div class="product-config-cats" id="pcats_${p.key}" style="display:none">${catsHTML}</div>
     </div>`;
   }).join('');
 }
@@ -1071,7 +1348,7 @@ function toggleProductRow(key) {
   const cb = document.getElementById(`pen_${key}`);
   const row = document.getElementById(`pcrow_${key}`);
   const cats = document.getElementById(`pcats_${key}`);
-  if (cb.checked) { row.classList.add("active"); cats.style.display = "flex"; }
+  if (cb.checked) { row.classList.add("active"); }
   else { row.classList.remove("active"); cats.style.display = "none"; document.querySelectorAll(`input[name="cat_${key}"]`).forEach(r => r.checked = false); }
 }
 
@@ -1117,8 +1394,7 @@ function saveFinancier() {
   for (const p of PRODUCTS) {
     const enabled = document.getElementById(`pen_${p.key}`).checked;
     const catEl = document.querySelector(`input[name="cat_${p.key}"]:checked`);
-    if (enabled && !catEl) { toast(`Please select a category for ${p.label}.`); return; }
-    products[p.key] = { enabled, category: enabled ? catEl.value : null };
+    products[p.key] = { enabled, category: (catEl ? catEl.value : null) || null };
     if (enabled) anyEnabled = true;
   }
   if (!anyEnabled) { toast("Please enable at least one product."); return; }
@@ -1838,6 +2114,444 @@ function closeConfirmDealerMasterModal() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// PAGE 5 — FI POLICY
+// ══════════════════════════════════════════════════════════════
+
+const FIP_SEGMENTS = ['ind', 'co'];
+
+// Field keys for each segment — used for save/load/clear
+const FIP_SEG_FIELDS = {
+  ind: ['minCibil','maxTenure','maxLoan','minIrr','processingFee','residence','guarantor','bankStatement','licenseType','ntc','remarks'],
+  co:  ['minCibil','maxTenure','maxLoan','minIrr','companyProperty','personalResidence','guarantor','annualTurnover','vintage','existingFleet','fleetSize','ntc','remarks']
+};
+
+// Fields that are toggle yes/no (stored as 'Yes'/'No')
+const FIP_TOGGLE_FIELDS = { ind: ['ntc'], co: ['existingFleet','ntc'] };
+
+// INR display fields
+const FIP_INR_FIELDS = { ind: ['maxLoan','processingFee'], co: ['maxLoan','annualTurnover'] };
+
+// PCT display fields
+const FIP_PCT_FIELDS = { ind: ['minIrr'], co: ['minIrr'] };
+
+// Mandatory fields per segment (all except remarks)
+const FIP_MANDATORY = {
+  ind: ['minCibil','maxTenure','maxLoan','minIrr','processingFee','residence','guarantor','bankStatement','licenseType','ntc'],
+  co:  ['minCibil','maxTenure','maxLoan','minIrr','companyProperty','personalResidence','guarantor','annualTurnover','vintage','existingFleet','ntc']
+};
+// conditionally mandatory: fleetSize is mandatory only when existingFleet = Yes
+const FIP_CONDITIONAL_MANDATORY = {
+  co: [{ key: 'fleetSize', condition: function() { return getFIPYNValue('fip_co_existingFleet') === 'Yes'; } }]
+};
+
+let fiPolicyContext = null;
+
+function getFIPolicy(fiName, productKey) {
+  if (!state.fiPolicy) return null;
+  return (state.fiPolicy[fiName] || {})[productKey] || null;
+}
+
+function clearFIPolicyFilters() {
+  document.getElementById("fiPolicySearch").value = "";
+  document.getElementById("fiPolicyFilterCategory").value = "";
+  document.getElementById("fiPolicyFilterStatus").value = "";
+  renderFIPolicy();
+}
+
+function renderFIPolicy() {
+  var catSel = document.getElementById("fiPolicyFilterCategory");
+  var stSel  = document.getElementById("fiPolicyFilterStatus");
+  if (catSel.options.length === 1) FI_CATEGORIES.forEach(function(c){ var o=document.createElement("option");o.value=c;o.textContent=c;catSel.appendChild(o); });
+  if (stSel.options.length  === 1) FI_STATUSES.forEach(function(s){ var o=document.createElement("option");o.value=s;o.textContent=s;stSel.appendChild(o); });
+
+  var search  = (document.getElementById("fiPolicySearch").value || "").toLowerCase();
+  var fCat    = document.getElementById("fiPolicyFilterCategory").value;
+  var fStatus = document.getElementById("fiPolicyFilterStatus").value;
+
+  var filtered = state.financiers
+    .slice().sort(function(a,b){ return a.localeCompare(b); })
+    .map(function(name){ return { name:name, meta: state.financiersMeta.find(function(m){ return m.name===name; }) || {name:name} }; })
+    .filter(function(f){
+      if (search  && !f.name.toLowerCase().includes(search)) return false;
+      if (fCat    && (f.meta.category||"") !== fCat)         return false;
+      if (fStatus && (f.meta.status||"")   !== fStatus)      return false;
+      return true;
+    });
+
+  document.getElementById("fiPolicySummary").innerHTML =
+    '<div class="sum-card"><div class="sum-label">Total FIs</div><div class="sum-value">'+state.financiers.length+'</div><div class="sum-sub">in master list</div></div>' +
+    '<div class="sum-card"><div class="sum-label">Products</div><div class="sum-value">'+PRODUCTS.length+'</div><div class="sum-sub">'+PRODUCTS.map(function(p){return p.label;}).join(", ")+'</div></div>';
+
+  if (!filtered.length) {
+    document.getElementById("fiPolicyTable").innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div>No financiers match your filters.</div></div>';
+    return;
+  }
+
+  var rows = filtered.map(function(f, idx){
+    var productBtns = PRODUCTS.map(function(p){
+      var pol = getFIPolicy(f.name, p.key);
+      var applicable = pol && (pol.ind_applicable || pol.co_applicable);
+      var cls  = applicable ? "defined" : "na";
+      var icon = applicable ? "✓" : "✕";
+      return '<button class="fip-product-btn '+cls+'" onclick="openFIPolicyModal(\''+escJs(f.name)+'\',\''+p.key+'\',\''+escJs(p.label)+'\')">'+ icon +' '+ p.label +'</button>';
+    }).join("");
+    return '<tr>'+
+      '<td style="text-align:center;font-size:12px;color:var(--text-muted);">'+(idx+1)+'</td>'+
+      '<td style="font-weight:600;font-size:13px;white-space:nowrap;">'+escHtml(f.name)+'</td>'+
+      '<td><span class="badge badge-count">'+escHtml(f.meta.category||"—")+'</span></td>'+
+      '<td><span class="badge" style="'+(f.meta.status==="Active"||f.meta.status==="Onboarded"?"background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-border);":"background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);")+'">'+(f.meta.status||"—")+'</span></td>'+
+      '<td><div style="display:flex;gap:6px;flex-wrap:wrap;">'+productBtns+'</div></td>'+
+    '</tr>';
+  }).join("");
+
+  document.getElementById("fiPolicyTable").innerHTML =
+    '<table class="dealer-table"><thead><tr>'+
+    '<th style="width:44px;text-align:center;">S.No</th>'+
+    '<th style="min-width:180px;">Financier</th><th>Category</th><th>Status</th>'+
+    '<th style="min-width:320px;">Product Policies</th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div style="margin-top:10px;font-size:11px;color:var(--text-hint);display:flex;gap:16px;">'+
+    '<span><span class="fip-product-btn defined" style="pointer-events:none;">✓ Label</span> Policy defined &amp; applicable</span>'+
+    '<span><span class="fip-product-btn na" style="pointer-events:none;">✕ Label</span> Not applicable / Not yet defined</span>'+
+    '</div>';
+}
+
+// ── MODAL ──────────────────────────────────────────────────────
+function switchFIPTab(seg) {
+  var panels = { ind: document.getElementById("fip_panel_ind"), co: document.getElementById("fip_panel_co") };
+  var tabs   = { ind: document.getElementById("fip_tab_ind"),   co: document.getElementById("fip_tab_co") };
+  Object.keys(panels).forEach(function(s) {
+    panels[s].style.display = s === seg ? "" : "none";
+    if (s === seg) {
+      tabs[s].style.background = "var(--surface)";
+      tabs[s].style.borderBottomColor = "var(--accent)";
+      tabs[s].style.color = "var(--accent)";
+      tabs[s].style.fontWeight = "600";
+    } else {
+      tabs[s].style.background = "none";
+      tabs[s].style.borderBottomColor = "transparent";
+      tabs[s].style.color = "var(--text-muted)";
+      tabs[s].style.fontWeight = "500";
+    }
+  });
+}
+
+function formatINR(val) {
+  if (!val && val !== 0) return '—';
+  return '₹' + Number(val).toLocaleString('en-IN');
+}
+function formatPCT(val) {
+  if (!val && val !== 0) return '—';
+  return val + '%';
+}
+
+function toggleFIPYN(fid) {
+  // Determine which segment this toggle belongs to
+  var seg = fid.indexOf('_ind_') > -1 ? 'ind' : 'co';
+  var saveBtn = document.getElementById('fip_' + seg + '_saveBtn');
+  var inEditMode = saveBtn && saveBtn.style.display !== 'none';
+  if (!inEditMode) return; // block toggle if not in edit mode
+
+  var label = document.getElementById(fid + '_label');
+  var track = document.getElementById(fid + '_track');
+  var thumb = document.getElementById(fid + '_thumb');
+  if (!label) return;
+  var isYes = label.textContent === 'Yes';
+  if (!isYes) {
+    label.textContent = 'Yes'; label.style.color = 'var(--ok)';
+    track.style.background = 'var(--ok)'; thumb.style.left = '18px';
+    // Show fleet size field if existingFleet
+    if (fid === 'fip_co_existingFleet') {
+      var row = document.getElementById('fip_co_fleetSizeRow');
+      if (row) row.style.display = '';
+    }
+  } else {
+    label.textContent = 'No'; label.style.color = 'var(--cat-d)';
+    track.style.background = '#ddd'; thumb.style.left = '2px';
+    if (fid === 'fip_co_existingFleet') {
+      var row = document.getElementById('fip_co_fleetSizeRow');
+      if (row) row.style.display = 'none';
+    }
+  }
+}
+
+function setFIPYN(fid, val) {
+  var label = document.getElementById(fid + '_label');
+  var track = document.getElementById(fid + '_track');
+  var thumb = document.getElementById(fid + '_thumb');
+  var view  = document.getElementById(fid + '_view');
+  var isYes = (val === 'Yes');
+  if (label) { label.textContent = isYes ? 'Yes' : 'No'; label.style.color = isYes ? 'var(--ok)' : 'var(--cat-d)'; }
+  if (track) track.style.background = isYes ? 'var(--ok)' : '#ddd';
+  if (thumb) thumb.style.left = isYes ? '18px' : '2px';
+  if (view)  view.textContent = isYes ? 'Yes' : 'No';
+}
+
+function getFIPYNValue(fid) {
+  var label = document.getElementById(fid + '_label');
+  return label ? label.textContent : 'No';
+}
+
+function isToggleField(seg, key) {
+  return (FIP_TOGGLE_FIELDS[seg] || []).indexOf(key) > -1;
+}
+function isINRField(seg, key) {
+  return (FIP_INR_FIELDS[seg] || []).indexOf(key) > -1;
+}
+function isPCTField(seg, key) {
+  return (FIP_PCT_FIELDS[seg] || []).indexOf(key) > -1;
+}
+function isWrapField(seg, key) {
+  return isINRField(seg, key) || isPCTField(seg, key);
+}
+
+function setFIPSegmentToggle(seg, applicable) {
+  var track   = document.getElementById('fip_' + seg + '_toggleTrack');
+  var thumb   = document.getElementById('fip_' + seg + '_toggleThumb');
+  var label   = document.getElementById('fip_' + seg + '_toggleLabel');
+  var body    = document.getElementById('fip_' + seg + '_body');
+  var editBtn = document.getElementById('fip_' + seg + '_editBtn');
+  var saveBtn = document.getElementById('fip_' + seg + '_saveBtn');
+  var hint    = document.getElementById('fip_' + seg + '_hint');
+
+  if (applicable) {
+    if (track) { track.style.background = 'var(--ok)'; }
+    if (thumb) { thumb.style.left = '20px'; }
+    if (label) { label.textContent = 'Applicable'; label.style.color = 'var(--ok)'; }
+    if (body)  { body.style.opacity = '1'; body.style.pointerEvents = 'auto'; }
+    if (hint)  { hint.style.display = 'none'; }
+    if (editBtn) editBtn.style.display = '';
+  } else {
+    if (track) { track.style.background = '#ddd'; }
+    if (thumb) { thumb.style.left = '2px'; }
+    if (label) { label.textContent = 'Not Applicable'; label.style.color = 'var(--cat-d)'; }
+    if (body)  { body.style.opacity = '0.4'; body.style.pointerEvents = 'none'; }
+    if (hint)  { hint.style.display = 'flex'; }
+    if (editBtn) editBtn.style.display = 'none';
+    if (saveBtn) saveBtn.style.display = 'none';
+    enterFIPSegmentViewMode(seg);
+  }
+}
+
+function toggleFIPolicySegment(seg) {
+  var label = document.getElementById('fip_' + seg + '_toggleLabel');
+  var nowApplicable = label.textContent !== 'Applicable';
+  setFIPSegmentToggle(seg, nowApplicable);
+  if (!nowApplicable && fiPolicyContext) {
+    if (!state.fiPolicy) state.fiPolicy = {};
+    if (!state.fiPolicy[fiPolicyContext.fiName]) state.fiPolicy[fiPolicyContext.fiName] = {};
+    var pol = state.fiPolicy[fiPolicyContext.fiName][fiPolicyContext.productKey] || {};
+    pol[seg + '_applicable'] = false;
+    state.fiPolicy[fiPolicyContext.fiName][fiPolicyContext.productKey] = pol;
+    saveState(); renderFIPolicy();
+  }
+}
+
+function openFIPolicyModal(fiName, productKey, productLabel) {
+  fiPolicyContext = { fiName: fiName, productKey: productKey, productLabel: productLabel };
+  document.getElementById('fiPolicyModalTitle').textContent = fiName;
+  document.getElementById('fiPolicyModalSub').textContent = 'Product: ' + productLabel;
+  var pol = getFIPolicy(fiName, productKey) || {};
+
+  FIP_SEGMENTS.forEach(function(seg) {
+    var applicable = !!pol[seg + '_applicable'];
+    setFIPSegmentToggle(seg, applicable);
+    var data = (pol[seg] || {});
+    (FIP_SEG_FIELDS[seg] || []).forEach(function(key) {
+      var fid = 'fip_' + seg + '_' + key;
+      var val = data[key] !== undefined ? data[key] : '';
+      var vEl = document.getElementById(fid + '_view');
+
+      if (isToggleField(seg, key)) {
+        setFIPYN(fid, val || 'No');
+        // always show toggle wrap, hide view field
+        var wrap = document.getElementById(fid + '_wrap');
+        if (wrap) wrap.style.display = 'flex';
+      } else if (isWrapField(seg, key)) {
+        if (vEl) vEl.textContent = isINRField(seg, key) ? (val ? formatINR(val) : '—') : (val ? formatPCT(val) : '—');
+        var eEl = document.getElementById(fid);
+        if (eEl) eEl.value = val || '';
+        var wrapEl = document.getElementById(fid + '_edit_wrap');
+        if (wrapEl) wrapEl.style.display = 'none';
+      } else {
+        if (vEl) vEl.textContent = val || '—';
+        var eEl = document.getElementById(fid);
+        if (eEl) { eEl.value = val || ''; eEl.style.display = 'none'; }
+      }
+    });
+    // fleet size row
+    if (seg === 'co') {
+      var fleetRow = document.getElementById('fip_co_fleetSizeRow');
+      if (fleetRow) fleetRow.style.display = data.existingFleet === 'Yes' ? '' : 'none';
+    }
+    var editBtn = document.getElementById('fip_' + seg + '_editBtn');
+    var saveBtn = document.getElementById('fip_' + seg + '_saveBtn');
+    if (editBtn) editBtn.style.display = applicable ? '' : 'none';
+    if (saveBtn) saveBtn.style.display = 'none';
+  });
+
+  document.getElementById('fiPolicyModalOverlay').classList.add('show');
+  switchFIPTab('ind');
+}
+
+function enterFIPSegmentEditMode(seg) {
+  var label = document.getElementById('fip_' + seg + '_toggleLabel');
+  if (label.textContent !== 'Applicable') return;
+  (FIP_SEG_FIELDS[seg] || []).forEach(function(key) {
+    var fid = 'fip_' + seg + '_' + key;
+    var vEl = document.getElementById(fid + '_view');
+    if (isToggleField(seg, key)) {
+      var wrap = document.getElementById(fid + '_wrap');
+      if (wrap) wrap.style.display = 'flex';
+      if (vEl) vEl.style.display = 'none';
+      // enable cursor in edit mode
+      var tk = document.getElementById(fid + '_track');
+      if (tk) { tk.style.cursor = 'pointer'; tk.style.opacity = '1'; }
+      if (fid === 'fip_co_existingFleet') {
+        var fleetRow = document.getElementById('fip_co_fleetSizeRow');
+        var curVal = getFIPYNValue(fid);
+        if (fleetRow) fleetRow.style.display = curVal === 'Yes' ? '' : 'none';
+      }
+    } else if (isWrapField(seg, key)) {
+      var wrapEl = document.getElementById(fid + '_edit_wrap');
+      if (wrapEl) wrapEl.style.display = 'flex';
+      if (vEl) vEl.style.display = 'none';
+    } else {
+      var eEl = document.getElementById(fid);
+      if (eEl) eEl.style.display = '';
+      if (vEl) vEl.style.display = 'none';
+    }
+  });
+  var editBtn = document.getElementById('fip_' + seg + '_editBtn');
+  var saveBtn = document.getElementById('fip_' + seg + '_saveBtn');
+  if (editBtn) editBtn.style.display = 'none';
+  if (saveBtn) saveBtn.style.display = '';
+}
+
+function enterFIPSegmentViewMode(seg) {
+  (FIP_SEG_FIELDS[seg] || []).forEach(function(key) {
+    var fid = 'fip_' + seg + '_' + key;
+    var vEl = document.getElementById(fid + '_view');
+    if (isToggleField(seg, key)) {
+      var wrap = document.getElementById(fid + '_wrap');
+      if (wrap) wrap.style.display = 'flex';
+      if (vEl) vEl.style.display = 'none';
+      // disable cursor in view mode
+      var tk = document.getElementById(fid + '_track');
+      if (tk) { tk.style.cursor = 'not-allowed'; tk.style.opacity = '0.6'; }
+    } else if (isWrapField(seg, key)) {
+      var wrapEl = document.getElementById(fid + '_edit_wrap');
+      if (wrapEl) wrapEl.style.display = 'none';
+      if (vEl) vEl.style.display = '';
+    } else {
+      var eEl = document.getElementById(fid);
+      if (eEl) eEl.style.display = 'none';
+      if (vEl) vEl.style.display = '';
+    }
+  });
+  var editBtn = document.getElementById('fip_' + seg + '_editBtn');
+  var saveBtn = document.getElementById('fip_' + seg + '_saveBtn');
+  if (editBtn) editBtn.style.display = '';
+  if (saveBtn) saveBtn.style.display = 'none';
+}
+
+function fipSegmentMandatoryCheck(seg) {
+  var label = document.getElementById('fip_' + seg + '_toggleLabel');
+  if (!label || label.textContent !== 'Applicable') return null;
+  var inEditMode = document.getElementById('fip_' + seg + '_saveBtn').style.display !== 'none';
+  var mandatoryKeys = (FIP_MANDATORY[seg] || []).slice();
+
+  // Add conditional mandatory fields
+  (FIP_CONDITIONAL_MANDATORY[seg] || []).forEach(function(c) {
+    if (c.condition()) mandatoryKeys.push(c.key);
+  });
+
+  var missing = [];
+  mandatoryKeys.forEach(function(key) {
+    var fid = 'fip_' + seg + '_' + key;
+    if (isToggleField(seg, key)) return; // toggles always have a value
+    if (inEditMode) {
+      var eEl = document.getElementById(fid);
+      if (eEl && (!eEl.value || !eEl.value.trim())) missing.push(key);
+    } else {
+      var vEl = document.getElementById(fid + '_view');
+      if (vEl && (!vEl.textContent.trim() || vEl.textContent.trim() === '—')) missing.push(key);
+    }
+  });
+  return missing.length ? missing : null;
+}
+
+const FIP_FIELD_LABELS = {
+  minCibil: 'Minimum CIBIL', maxTenure: 'Max Loan Tenure', maxLoan: 'Max Loan Amount',
+  minIrr: 'Minimum IRR', processingFee: 'Processing Fee', residence: 'Residence Criteria',
+  guarantor: 'Guarantor Required', bankStatement: 'L6M Bank Statement',
+  licenseType: 'License Type', ntc: 'NTC Loan',
+  companyProperty: 'Company Property', personalResidence: 'Personal Residence',
+  annualTurnover: 'Annual Turnover', vintage: 'Vintage', existingFleet: 'Existing Fleet',
+  fleetSize: 'Fleet Size'
+};
+
+function saveFIPSegment(seg) {
+  var missing = fipSegmentMandatoryCheck(seg);
+  if (missing) {
+    toast('⚠ Fill mandatory fields: ' + missing.map(function(k){ return FIP_FIELD_LABELS[k]||k; }).join(', '));
+    missing.forEach(function(key) {
+      var el = document.getElementById('fip_' + seg + '_' + key);
+      if (el && el.style.display !== 'none') { el.style.borderColor = 'var(--flag)'; setTimeout(function(){ el.style.borderColor=''; }, 2000); }
+    });
+    return;
+  }
+  var fiName = fiPolicyContext.fiName;
+  var productKey = fiPolicyContext.productKey;
+  if (!state.fiPolicy) state.fiPolicy = {};
+  if (!state.fiPolicy[fiName]) state.fiPolicy[fiName] = {};
+  var pol = state.fiPolicy[fiName][productKey] || {};
+  pol[seg + '_applicable'] = true;
+  pol[seg] = pol[seg] || {};
+  (FIP_SEG_FIELDS[seg] || []).forEach(function(key) {
+    var fid = 'fip_' + seg + '_' + key;
+    var val;
+    if (isToggleField(seg, key)) {
+      val = getFIPYNValue(fid);
+    } else {
+      var eEl = document.getElementById(fid);
+      val = eEl ? eEl.value.trim() : '';
+    }
+    pol[seg][key] = val;
+    // Update view
+    var vEl = document.getElementById(fid + '_view');
+    if (vEl) {
+      if (isINRField(seg, key)) vEl.textContent = val ? formatINR(val) : '—';
+      else if (isPCTField(seg, key)) vEl.textContent = val ? formatPCT(val) : '—';
+      else vEl.textContent = val || '—';
+    }
+  });
+  state.fiPolicy[fiName][productKey] = pol;
+  enterFIPSegmentViewMode(seg);
+  saveState(); renderFIPolicy();
+  toast('Saved ' + (seg === 'ind' ? 'Individual' : 'Company Owned') + ' policy for ' + fiName + ' · ' + fiPolicyContext.productLabel);
+}
+
+function closeFIPolicyModal() {
+  var allMissing = [];
+  FIP_SEGMENTS.forEach(function(seg) {
+    var missing = fipSegmentMandatoryCheck(seg);
+    if (missing) {
+      var segLabel = seg === 'ind' ? 'Individual' : 'Company Owned';
+      missing.forEach(function(k){ allMissing.push(segLabel + ' → ' + (FIP_FIELD_LABELS[k]||k)); });
+    }
+  });
+  if (allMissing.length) {
+    toast('⚠ Save or fill mandatory fields: ' + allMissing.join('; '));
+    return;
+  }
+  document.getElementById('fiPolicyModalOverlay').classList.remove('show');
+  fiPolicyContext = null;
+}
+
+
+
+// ══════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════
 function renderAll() { renderStats(); renderFilters(); renderDealers(); }
@@ -1850,6 +2564,7 @@ document.getElementById("confirmFinModalOverlay").addEventListener("click", e =>
 document.getElementById("finMasterModalOverlay").addEventListener("click", e => { if (e.target===e.currentTarget) closeFinancierMasterModal(); });
 document.getElementById("dealerMasterModalOverlay").addEventListener("click", e => { if (e.target===e.currentTarget) closeDealerMasterModal(); });
 document.getElementById("confirmDealerMasterOverlay").addEventListener("click", e => { if (e.target===e.currentTarget) closeConfirmDealerMasterModal(); });
+document.getElementById("fiPolicyModalOverlay").addEventListener("click", function(e) { if (e.target===e.currentTarget) closeFIPolicyModal(); });
 document.addEventListener("click", e => {
   const wrap = document.getElementById("dealerPickerWrap");
   if (wrap && !wrap.contains(e.target)) document.getElementById("dealerPickerDropdown").classList.remove("open");
