@@ -16,6 +16,10 @@
     --cat-d: #dc2626; --cat-d-bg: #fef2f2; --cat-d-border: #fecaca;
     --flag: #dc2626; --flag-bg: #fef2f2; --flag-border: #fecaca;
     --ok: #15803d; --ok-bg: #f0fdf4; --ok-border: #bbf7d0;
+
+    --health-green-bg: #dcfce7; --health-green-border: #16a34a; --health-green-text: #14532d;
+    --health-amber-bg: #fff7ed; --health-amber-border: #d97706; --health-amber-text: #c2410c;
+    --health-red-bg:   #fef2f2; --health-red-border:   #dc2626; --health-red-text:   #991b1b;
     --radius: 10px; --radius-sm: 6px;
     --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
     --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
@@ -117,31 +121,31 @@
   .dealer-grid { display: flex; flex-direction: column; gap: 12px; }
   .dealer-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: box-shadow 0.15s; }
   .dealer-card:hover { box-shadow: var(--shadow-md); }
-  .dealer-header { display: flex; align-items: center; padding: 14px 18px; cursor: pointer; gap: 12px; user-select: none; }
-  .dealer-avatar { width: 36px; height: 36px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; color: var(--text-muted); flex-shrink: 0; }
+  .dealer-header { display: flex; align-items: center; padding: 10px 14px; cursor: pointer; gap: 10px; user-select: none; }
+  .dealer-avatar { width: 28px; height: 28px; border-radius: 6px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
   .dealer-info { flex: 1; }
-  .dealer-name { font-weight: 600; font-size: 14px; }
-  .dealer-rm { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .dealer-name { font-weight: 600; font-size: 13px; line-height: 1.3; }
+  .dealer-rm { font-size: 11px; color: var(--text-muted); line-height: 1.2; }
   .dealer-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .dealer-card.open .chevron { transform: rotate(180deg); }
   .dealer-body { display: none; border-top: 1px solid var(--border); }
   .dealer-card.open .dealer-body { display: block; }
-  .fin-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; background: var(--surface2); border-bottom: 1px solid var(--border); }
+  .fin-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--surface2); border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
   .fin-toolbar-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
   .fin-list { padding: 0; }
   .fin-row { border-bottom: 1px solid var(--border); }
   .fin-row:last-child { border-bottom: none; }
-  .fin-row-header { display: flex; align-items: center; gap: 10px; padding: 11px 18px; cursor: pointer; user-select: none; }
+  .fin-row-header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; user-select: none; flex-wrap: wrap; }
   .fin-row-header:hover { background: var(--surface2); }
   .fin-row-name { font-weight: 600; font-size: 13px; flex: 1; }
   .fin-chevron { color: var(--text-hint); font-size: 13px; transition: transform 0.2s; flex-shrink: 0; }
   .fin-row.open .fin-chevron { transform: rotate(180deg); }
-  .fin-row-body { display: none; padding: 4px 18px 14px; }
+  .fin-row-body { display: none; padding: 4px 12px 10px; }
   .fin-row.open .fin-row-body { display: block; }
   .product-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
-  .product-cat-item { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; background: var(--surface2); }
+  .product-cat-item { border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; background: var(--surface2); }
   .product-cat-item.enabled { background: var(--surface); }
-  .product-label { font-size: 11px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .product-label { font-size: 11px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; line-height: 1.2; }
   .product-cat-item.enabled .product-label { color: var(--text); }
   .product-status { display: flex; align-items: center; gap: 6px; }
   .status-disabled { font-size: 12px; color: var(--text-hint); }
@@ -240,12 +244,159 @@
   .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
   .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
 
-  @media (max-width: 600px) {
-    .stats-bar, .summary-bar { grid-template-columns: repeat(2, 1fr); }
-    .toolbar { gap: 8px; }
-    .search-box { width: 100%; }
-    .product-cat-grid { grid-template-columns: repeat(2, 1fr); }
-    .dealer-table th:nth-child(3), .dealer-table td:nth-child(3) { display: none; }
+  /* ══════════════════════════════════════════════
+     RESPONSIVE — MOBILE FIRST
+  ══════════════════════════════════════════════ */
+
+  /* Nav — scrollable tab strip on mobile */
+  .header { flex-wrap: wrap; height: auto; min-height: 56px; padding: 8px 16px; gap: 8px; }
+  .header-left { width: 100%; justify-content: space-between; }
+  .header-nav { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; white-space: nowrap; width: 100%; padding-bottom: 2px; }
+  .header-nav::-webkit-scrollbar { display: none; }
+  .nav-btn { font-size: 12px; padding: 5px 10px; flex-shrink: 0; }
+  .save-indicator { display: none; } /* hide on mobile to save space */
+
+  /* Container */
+  .container { padding: 12px; }
+
+  /* Stats bars — 2 cols on mobile */
+  .stats-bar, .summary-bar { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px; }
+  .stat-value, .sum-value { font-size: 22px; }
+
+  /* Toolbars — stack vertically */
+  .toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+  .toolbar-title { font-size: 14px; }
+  .search-box { width: 100%; }
+  .filter-select { width: 100%; }
+  .toolbar .btn { width: 100%; justify-content: center; }
+
+  /* Dealer picker — full width */
+  .dealer-picker-wrap { width: 100%; }
+  .dealer-picker-btn { width: 100%; justify-content: center; }
+  .dealer-picker-dropdown { width: 100%; left: 0; right: 0; }
+
+  /* Dealer cards */
+  .dealer-header { padding: 12px; gap: 8px; }
+  .dealer-avatar { width: 32px; height: 32px; font-size: 11px; }
+  .dealer-name { font-size: 13px; }
+  .dealer-rm { font-size: 11px; }
+  .dealer-badges { gap: 4px; }
+
+  /* Product insight strip — 2 cols */
+  .product-cat-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Fin row */
+  .fin-row-header { padding: 10px 12px; flex-wrap: wrap; gap: 6px; }
+  .fin-row-name { font-size: 12px; }
+
+  /* Modals — full screen on mobile */
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal { max-width: 100% !important; border-radius: 16px 16px 0 0; max-height: 92vh; overflow-y: auto; }
+  .modal-header { padding: 16px 16px 12px; }
+  .modal-body { padding: 12px 16px; }
+  .modal-footer { padding: 12px 16px; }
+
+  /* Stats modal */
+  .stats-modal { max-width: 100% !important; border-radius: 16px 16px 0 0; }
+  .stats-modal-body { padding: 16px; }
+  .stats-grid { grid-template-columns: 1fr; gap: 14px; }
+
+  /* FI Policy modal */
+  .modal[style*="560px"] { max-width: 100% !important; }
+
+  /* Tables — horizontal scroll wrapper */
+  .dealer-table { font-size: 11px; }
+  .dealer-table th, .dealer-table td { padding: 8px 10px; white-space: nowrap; }
+
+  /* Page headers */
+  .page-title { font-size: 16px; }
+  .page-sub { font-size: 12px; }
+
+  /* Filter bars */
+  .filter-bar { flex-direction: column; align-items: stretch; }
+  .filter-chip { justify-content: center; }
+
+  /* View toggle */
+  .view-toggle { width: 100%; }
+  .toggle-btn { flex: 1; }
+
+  /* Product config in modal */
+  .product-config-row { padding: 10px; }
+  .product-config-cats { flex-wrap: wrap; gap: 4px; }
+  .pcat-radio label { width: 30px; height: 30px; font-size: 12px; }
+
+  /* Health picker */
+  .health-picker { flex-wrap: wrap; gap: 8px; }
+  .health-picker-opt { flex: 1 1 40%; min-width: 80px; padding: 8px; font-size: 12px; }
+
+  /* FI Policy tabs */
+  #fip_tab_ind, #fip_tab_co { font-size: 12px; padding: 10px 8px; }
+
+  /* Form grids in modals — single column on mobile */
+  .modal-body [style*="grid-template-columns:1fr 1fr"],
+  .modal-body [style*="grid-template-columns: 1fr 1fr"],
+  .modal-body [style*="grid-template-columns:1fr 1fr 1fr"],
+  .modal-body [style*="grid-template-columns: 1fr 1fr 1fr"],
+  .modal-body [style*="grid-template-columns:repeat(2"],
+  .modal-body [style*="grid-template-columns:repeat(3"],
+  .modal-body [style*="grid-template-columns:repeat(4"] { grid-template-columns: 1fr !important; }
+
+  /* Coverage items */
+  .coverage-grid { grid-template-columns: 1fr 1fr; }
+
+  /* Toast */
+  .toast { left: 12px; right: 12px; bottom: 16px; }
+
+  /* Confirm modals */
+  .confirm-modal { border-radius: 16px 16px 0 0; }
+
+  /* Dealer Master / FI tables overflow */
+  #fiPolicyTable, #finMasterTable, #dealerMasterTable { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  @media (min-width: 601px) {
+    /* Restore desktop styles above 600px */
+    .header { flex-wrap: nowrap; height: 56px; padding: 0 24px; gap: 0; }
+    .header-left { width: auto; }
+    .header-nav { overflow-x: visible; white-space: normal; width: auto; padding-bottom: 0; }
+    .nav-btn { font-size: 13px; padding: 6px 14px; }
+    .save-indicator { display: flex; }
+    .container { padding: 24px 20px; }
+    .stats-bar, .summary-bar { grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .stat-value, .sum-value { font-size: 28px; }
+    .toolbar { flex-direction: row; align-items: center; gap: 10px; }
+    .search-box { width: 210px; }
+    .filter-select { width: auto; }
+    .toolbar .btn { width: auto; }
+    .dealer-picker-wrap { width: auto; }
+    .dealer-picker-btn { width: auto; }
+    .dealer-picker-dropdown { width: 320px; }
+    .modal-overlay { padding: 20px; align-items: center; }
+    .modal { border-radius: 14px; }
+    .modal-header { padding: 20px 24px 16px; }
+    .modal-body { padding: 20px 24px; }
+    .modal-footer { padding: 16px 24px; }
+    .stats-modal { border-radius: 14px; }
+    .stats-modal-body { padding: 24px; }
+    .stats-grid { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; }
+    .dealer-table { font-size: 14px; }
+    .dealer-table th, .dealer-table td { padding: 10px 16px; white-space: normal; }
+    .page-title { font-size: 20px; }
+    .page-sub { font-size: 13px; }
+    .filter-bar { flex-direction: row; align-items: center; }
+    .filter-chip { justify-content: flex-start; }
+    .view-toggle { width: fit-content; }
+    .toggle-btn { flex: initial; }
+    .health-picker { flex-wrap: nowrap; }
+    .health-picker-opt { flex: 1; padding: 10px 16px; font-size: 13px; }
+    .confirm-modal { border-radius: 14px; }
+    .coverage-grid { grid-template-columns: repeat(2, 1fr); }
+    .toast { left: auto; right: 24px; bottom: 24px; }
+    .fin-row-header { flex-wrap: nowrap; }
+  }
+
+  @media (min-width: 900px) {
+    .stats-bar { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
   }
   .confirm-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500; align-items:center; justify-content:center; padding:20px; }
   .confirm-modal-overlay.show { display:flex; }
@@ -262,6 +413,27 @@
   .fip-product-btn.defined { border-color:var(--cat-b-border);background:var(--cat-b-bg);color:var(--cat-b); }
   .fip-product-btn.na { border-color:var(--border);background:var(--surface2);color:var(--text-hint); }
   .fip-product-btn.undefined { border-color:var(--border);background:var(--surface);color:var(--text-muted); }
+
+  /* Health status */
+  .health-dot { width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0; }
+  .health-green { background:#16a34a; }
+  .health-amber { background:#d97706; }
+  .health-red   { background:#dc2626; }
+  .health-none  { background:#d1d5db; }
+  .health-btn { display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;border:1px solid var(--border);background:var(--surface);font-size:11px;font-weight:500;cursor:pointer;transition:all 0.12s;color:var(--text-muted); }
+  .health-btn:hover { border-color:#b0ada4; }
+  .health-btn.green { background:#f0fdf4;border-color:#86efac;color:#14532d; }
+  .health-btn.amber { background:#fff7ed;border-color:#fdba74;color:#c2410c; }
+  .health-btn.red   { background:#fef2f2;border-color:#fecaca;color:#dc2626; }
+  /* Health picker modal */
+  .health-picker { display:flex;gap:10px;margin-top:8px; }
+  .health-picker-opt { display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:8px;border:2px solid var(--border);cursor:pointer;font-size:13px;font-weight:500;transition:all 0.12s;flex:1;justify-content:center; }
+  .health-picker-opt:hover { border-color:#b0ada4; }
+  .health-picker-opt.selected-green { border-color:#16a34a;background:#f0fdf4;color:#14532d; }
+  .health-picker-opt.selected-amber { border-color:#d97706;background:#fff7ed;color:#c2410c; }
+  .health-picker-opt.selected-red   { border-color:#dc2626;background:#fef2f2;color:#dc2626; }
+  .health-picker-opt.selected-na    { border-color:#9ca3af;background:#f3f4f6;color:#6b7280; }
+
 </style>
 </head>
 <body>
@@ -307,6 +479,13 @@
     <!-- Filter added dealers -->
     <input type="text" class="search-box" placeholder="Filter added dealers..." id="searchBox" oninput="renderDealers()">
     <select class="filter-select" id="filterFinancier" onchange="renderDealers()"><option value="">All Financiers</option></select>
+    <select class="filter-select" id="filterHealth" onchange="renderDealers()">
+      <option value="">All Health</option>
+      <option value="green">🟢 Green</option>
+      <option value="amber">🟡 Amber</option>
+      <option value="red">🔴 Red</option>
+      <option value="none">⚪ Not Set</option>
+    </select>
     <button class="btn btn-secondary btn-sm" onclick="exportData()">⬇ Export</button>
     <button class="btn btn-primary btn-sm" onclick="openStatsModal()">📊 Stats</button>
   </div>
@@ -975,6 +1154,40 @@
   </div>
 </div>
 
+<!-- ── HEALTH STATUS MODAL ── -->
+<div class="modal-overlay" id="healthModalOverlay">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="healthModalTitle">Set Health Status</div>
+        <div class="modal-sub" id="healthModalSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeHealthModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Select the current financing health for this product at this dealer:</div>
+      <div class="health-picker">
+        <div class="health-picker-opt" id="hopt_green" onclick="selectHealth('green')">
+          <span class="health-dot health-green"></span> Green
+        </div>
+        <div class="health-picker-opt" id="hopt_amber" onclick="selectHealth('amber')">
+          <span class="health-dot health-amber"></span> Amber
+        </div>
+        <div class="health-picker-opt" id="hopt_red" onclick="selectHealth('red')">
+          <span class="health-dot health-red"></span> Red
+        </div>
+        <div class="health-picker-opt" id="hopt_na" onclick="selectHealth('na')">
+          <span class="health-dot health-none"></span> N/A
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeHealthModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveHealthStatus()">Save</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toastMsg"></span></div>
 
 <script>
@@ -1006,7 +1219,7 @@ const CATS = ["A","B","C","D"];
 const CAT_COLORS = { A:'var(--cat-a)', B:'var(--cat-b)', C:'var(--cat-c)', D:'var(--cat-d)' };
 const STORAGE_KEY = "euler_vf_v2";
 
-let state = { dealers: DEALERS_RAW, financiers: FINANCIERS_RAW, financiersMeta: FINANCIERS_META.map(m=>({...m})), mapping: {}, addedDealers: [], dealersMaster: [], fiPolicy: {} };
+let state = { dealers: DEALERS_RAW, financiers: FINANCIERS_RAW, financiersMeta: FINANCIERS_META.map(m=>({...m})), mapping: {}, addedDealers: [], dealersMaster: [], fiPolicy: {}, dealerHealth: {} };
 let modalContext = null;
 let openDealerCards = new Set();
 let openGapCards = new Set();
@@ -1023,7 +1236,8 @@ function saveState() {
       financiers: state.financiers,
       financiersMeta: state.financiersMeta,
       dealersMaster: state.dealersMaster,
-      fiPolicy: state.fiPolicy
+      fiPolicy: state.fiPolicy,
+      dealerHealth: state.dealerHealth
     }));
     document.getElementById("saveDot").style.background = "#4ade80";
     document.getElementById("saveLabel").textContent = "Saved · " + new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
@@ -1041,6 +1255,7 @@ function loadState() {
         if (parsed.financiersMeta) state.financiersMeta = parsed.financiersMeta;
         if (parsed.dealersMaster && parsed.dealersMaster.length) state.dealersMaster = parsed.dealersMaster;
         if (parsed.fiPolicy) state.fiPolicy = parsed.fiPolicy;
+        if (parsed.dealerHealth) state.dealerHealth = parsed.dealerHealth;
       } else {
         state.mapping = parsed;
         state.addedDealers = [];
@@ -1114,13 +1329,6 @@ function renderStats() {
       <div class="stat-value">${state.financiers.length}</div>
       <div class="stat-sub">${totalLinks} dealer links</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">Category Breakdown</div>
-      <div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;">
-        ${CATS.map(c=>`<span class="badge" style="background:var(--cat-${c.toLowerCase()}-bg);color:var(--cat-${c.toLowerCase()});border:1px solid var(--cat-${c.toLowerCase()}-border)">${c}: ${catCounts[c]}</span>`).join('')}
-      </div>
-      <div class="stat-sub" style="margin-top:4px;">product-level</div>
-    </div>
     <div class="stat-card stat-card-clickable" onclick="showDealerList('no-financiers')">
       <div class="stat-label">No Financiers</div>
       <div class="stat-value" style="color:${noFinanciers.length>0?'var(--cat-d)':'var(--green)'}">${noFinanciers.length}</div>
@@ -1186,6 +1394,11 @@ function addDealer(dealerName, location) {
   if (state.addedDealers.some(d => d.dealer===dealerName && d.location===location)) return;
   const masterObj = getDealerMasterList().find(d => d.dealerName===dealerName && d.location===location);
   state.addedDealers.push({ dealer: dealerName, location, rm: masterObj ? (masterObj.rmSales||"") : "", vfPoc: masterObj ? (masterObj.vfPoc||"") : "" });
+  // Default health for all products = na
+  if (!state.dealerHealth[dealerName]) {
+    state.dealerHealth[dealerName] = {};
+    PRODUCTS.forEach(function(p){ state.dealerHealth[dealerName][p.key] = 'na'; });
+  }
   document.getElementById("dealerPickerDropdown").classList.remove("open");
   saveState(); renderAll();
   toast(dealerName+" ("+location+") added.");
@@ -1215,8 +1428,9 @@ function renderFilters() {
 }
 
 function renderDealers() {
-  const search = document.getElementById("searchBox").value.toLowerCase();
-  const finF = document.getElementById("filterFinancier").value;
+  const search  = document.getElementById("searchBox").value.toLowerCase();
+  const finF    = document.getElementById("filterFinancier").value;
+  const healthF = document.getElementById("filterHealth").value;
   document.getElementById("addedCount").textContent = "("+state.addedDealers.length+"/"+getDealerMasterList().length+")";
   const grid = document.getElementById("dealerGrid");
   if (state.addedDealers.length === 0) {
@@ -1226,6 +1440,11 @@ function renderDealers() {
   let dealers = state.addedDealers.filter(d => {
     if (search && !d.dealer.toLowerCase().includes(search) && !(d.location||"").toLowerCase().includes(search) && !(d.rm||"").toLowerCase().includes(search)) return false;
     if (finF && !getDealerFinanciers(d.dealer)[finF]) return false;
+    if (healthF) {
+      const oh = computeOverallHealth(d.dealer);
+      if (healthF === 'none' && oh !== null) return false;
+      if (healthF !== 'none' && oh !== healthF) return false;
+    }
     return true;
   });
   if (!dealers.length) { grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div>No dealers match your filter.</div></div>'; return; }
@@ -1242,34 +1461,47 @@ function renderDealers() {
 function renderDealerCard(d) {
   const fins = getDealerFinanciers(d.dealer);
   const finCount = Object.keys(fins).length;
-  const productCatMatrix = {};
-  PRODUCTS.forEach(p => { productCatMatrix[p.key] = {A:0,B:0,C:0,D:0}; });
+  // Count financiers enabled per product (regardless of category)
+  const productFinCount = {};
+  PRODUCTS.forEach(p => { productFinCount[p.key] = 0; });
   Object.values(fins).forEach(fdata => {
-    PRODUCTS.forEach(p => { const pd = fdata.products[p.key]; if (pd?.enabled && pd.category) productCatMatrix[p.key][pd.category]++; });
+    PRODUCTS.forEach(p => { const pd = fdata.products[p.key]; if (pd?.enabled) productFinCount[p.key]++; });
   });
-  const insightStrip = finCount === 0 ? '' : `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;padding:10px 18px;background:var(--surface2);border-top:1px solid var(--border);">
+
+  // Health status per product
+  const dealerHealth = (state.dealerHealth && state.dealerHealth[d.dealer]) ? state.dealerHealth[d.dealer] : {};
+
+  // Overall health badge for collapsed card header
+  var overallHealth = computeOverallHealth(d.dealer);
+
+  // Compact single-row insight strip
+  const insightStrip = `
+    <div style="display:flex;gap:6px;padding:6px 12px;background:var(--surface2);border-top:1px solid var(--border);flex-wrap:wrap;align-items:center;">
       ${PRODUCTS.map(p => {
-        const m = productCatMatrix[p.key];
-        const cats = CATS.filter(c => m[c] > 0);
-        const content = cats.length === 0
-          ? `<span style="font-size:11px;color:var(--text-hint);">No financiers</span>`
-          : cats.map(c => `<span style="display:inline-flex;align-items:center;gap:3px;background:var(--cat-${c.toLowerCase()}-bg);color:var(--cat-${c.toLowerCase()});border:1px solid var(--cat-${c.toLowerCase()}-border);border-radius:100px;font-size:10px;font-weight:700;padding:1px 7px;">${c}<span style="font-weight:400;opacity:0.8;">×${m[c]}</span></span>`).join('');
-        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;">
-          <div style="font-family:'DM Mono',monospace;font-size:10px;font-weight:600;color:var(--text-muted);margin-bottom:5px;">${p.label}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;">${content}</div></div>`;
+        const cnt = productFinCount[p.key];
+        const h = dealerHealth[p.key];
+        const healthClass = (h === 'na') ? 'none' : (h || 'none');
+        const healthLabel = h ? (h === 'na' ? 'N/A' : h.charAt(0).toUpperCase() + h.slice(1)) : '—';
+        const finText = cnt > 0 ? `${cnt} FI${cnt!==1?'s':''}` : '—';
+        return `<button class="health-btn ${healthClass}" style="font-family:'DM Mono',monospace;font-size:10px;gap:4px;" onclick="event.stopPropagation();openHealthModal('${escJs(d.dealer)}','${p.key}','${escJs(p.label)}')">
+          <span class="health-dot health-${healthClass}"></span>
+          <span style="font-weight:700;">${p.label}</span>
+          <span style="opacity:0.6;">${finText}</span>
+        </button>`;
       }).join('')}
     </div>`;
+
   return `
     <div class="dealer-card" data-dealer="${escHtml(d.dealer)}">
       <div class="dealer-header" onclick="toggleDealerCard('${escJs(d.dealer)}')">
-        <div class="dealer-avatar">${getInitials(d.dealer)}</div>
-        <div class="dealer-info"><div class="dealer-name">${escHtml(d.dealer === 'COCO' ? 'COCO - ' + d.location : d.dealer)}</div><div class="dealer-rm">${escHtml(d.location)} ${(d.vfPoc || (getDealerMasterList().find(m=>m.dealerName===d.dealer&&m.location===d.location)||{}).vfPoc) ? "· VF POC: "+escHtml(d.vfPoc || (getDealerMasterList().find(m=>m.dealerName===d.dealer&&m.location===d.location)||{}).vfPoc) : ""}</div></div>
-        <div class="dealer-badges"><span class="badge badge-count">${finCount} financier${finCount!==1?'s':''}</span></div>
+        <div class="dealer-avatar" style="${overallHealth ? `background:var(--health-${overallHealth}-bg);border-color:var(--health-${overallHealth}-border);color:var(--health-${overallHealth}-text);` : ''}">${getInitials(d.dealer)}</div>
+        <div class="dealer-info">
+          <div class="dealer-name">${escHtml(d.dealer === 'COCO' ? 'COCO - ' + d.location : d.dealer)}</div>
+          <div class="dealer-rm">${escHtml(d.location)} ${(d.vfPoc || (getDealerMasterList().find(m=>m.dealerName===d.dealer&&m.location===d.location)||{}).vfPoc) ? "· VF POC: "+escHtml(d.vfPoc || (getDealerMasterList().find(m=>m.dealerName===d.dealer&&m.location===d.location)||{}).vfPoc) : ""}</div>
+        </div>
+        <div class="dealer-badges"><span class="badge badge-count">${finCount} FI${finCount!==1?'s':''}</span></div>
+        <button class="btn btn-danger btn-sm" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();removeAddedDealer('${escJs(d.dealer)}','${escJs(d.location||'')}')" title="Remove dealer">✕</button>
         <span class="chevron">▾</span>
-      </div>
-      <div style="padding:6px 18px 8px;background:var(--surface2);border-top:1px solid var(--border);display:flex;justify-content:flex-end;" onclick="event.stopPropagation()">
-        <button class="btn btn-danger btn-sm" onclick="removeAddedDealer('${escJs(d.dealer)}','${escJs(d.location||'')}')">✕ Remove Dealer</button>
       </div>
       ${insightStrip}
       <div class="dealer-body">
@@ -1290,12 +1522,13 @@ function renderFinancierList(dealerName, fins) {
       const pd = fdata.products[p.key];
       const enabled = pd && pd.enabled;
       if (!enabled) return `<div class="product-cat-item"><div class="product-label">${p.label}</div><div class="product-status"><span class="status-disabled">— Not enabled</span></div></div>`;
-      const cat = pd.category;
-      return `<div class="product-cat-item enabled"><div class="product-label">${p.label}</div><div class="product-status">${cat?`<span class="cat-pill cat-pill-${cat}">${cat}</span>`:`<span class="status-disabled">No category</span>`}</div></div>`;
+      const cat = pd.category || null;
+      return `<div class="product-cat-item enabled"><div class="product-label">${p.label}</div><div class="product-status">${cat?`<span class="cat-pill cat-pill-${cat}">${cat}</span>`:`<span class="status-disabled">—</span>`}</div></div>`;
     }).join('');
     const enabledProducts = PRODUCTS.filter(p => fdata.products[p.key]?.enabled);
     const summaryChips = enabledProducts.map(p => {
       const cat = fdata.products[p.key].category;
+      if (!cat) return '';
       return `<span class="badge" style="font-family:'DM Mono',monospace;font-size:10px;background:var(--cat-${cat.toLowerCase()}-bg);color:var(--cat-${cat.toLowerCase()});border:1px solid var(--cat-${cat.toLowerCase()}-border)">${p.label}·${cat}</span>`;
     }).join('');
     return `
@@ -1303,9 +1536,9 @@ function renderFinancierList(dealerName, fins) {
         <div class="fin-row-header" onclick="toggleFinRow('${escJs(dealerName)}','${escJs(finName)}')">
           <div class="fin-row-name">${escHtml(finName)}</div>
           <div style="display:flex;gap:5px;flex-wrap:wrap;flex:1;">${summaryChips}</div>
-          <div style="display:flex;gap:6px;" onclick="event.stopPropagation()">
-            <button class="btn btn-secondary btn-sm" onclick="openEditModal('${escJs(dealerName)}','${escJs(finName)}')">Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="removeFinancier('${escJs(dealerName)}','${escJs(finName)}')">Remove</button>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openEditModal('${escJs(dealerName)}','${escJs(finName)}')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();removeFinancier('${escJs(dealerName)}','${escJs(finName)}')">Remove</button>
           </div>
           <span class="fin-chevron">▾</span>
         </div>
@@ -1866,7 +2099,7 @@ function saveFinancierMaster() {
     else state.financiersMeta.push(record);
     toast(`"${name}" updated.`);
   } else {
-    if (state.financiers.includes(name)) { toast(`"${name}" already exists.`); return; }
+    if (state.financiers.some(f => f.toLowerCase() === name.toLowerCase())) { toast(`"${name}" already exists in the master list.`); return; }
     state.financiers.push(name);
     state.financiersMeta.push(record);
     toast(`"${name}" added to master list.`);
@@ -2551,6 +2784,66 @@ function closeFIPolicyModal() {
 
 
 
+// ── HEALTH STATUS ─────────────────────────────────────────────
+let healthContext = null;
+let selectedHealth = null;
+
+function computeOverallHealth(dealerName) {
+  const h = state.dealerHealth[dealerName] || {};
+  const setValues = PRODUCTS.map(p => h[p.key]).filter(v => v && v !== 'na');
+  if (!setValues.length) return null;
+  const redCount   = setValues.filter(v => v === 'red').length;
+  const amberCount = setValues.filter(v => v === 'amber').length;
+  const greenCount = setValues.filter(v => v === 'green').length;
+  // 🔴 Red: 3+ Red AND no Green (Amber does not offset Red)
+  if (redCount >= 3 && greenCount === 0) return 'red';
+  // 🟢 Green: all set products are Green
+  if (redCount === 0 && amberCount === 0) return 'green';
+  // 🟡 Amber: everything else
+  // (1-2 Red, OR 3 Red with at least 1 Green, OR any Amber with fewer than 3 Red)
+  return 'amber';
+}
+
+function openHealthModal(dealerName, productKey, productLabel) {
+  healthContext = { dealerName, productKey, productLabel };
+  selectedHealth = (state.dealerHealth[dealerName] || {})[productKey] || null;
+  document.getElementById("healthModalTitle").textContent = "Health Status";
+  document.getElementById("healthModalSub").textContent = `${dealerName} · ${productLabel}`;
+  ['green','amber','red','na'].forEach(h => {
+    const el = document.getElementById("hopt_" + h);
+    if (el) el.className = "health-picker-opt" + (selectedHealth === h ? " selected-" + (h === 'na' ? 'na' : h) : "");
+  });
+  document.getElementById("healthModalOverlay").classList.add("show");
+}
+
+function closeHealthModal() {
+  document.getElementById("healthModalOverlay").classList.remove("show");
+  healthContext = null; selectedHealth = null;
+}
+
+function selectHealth(val) {
+  selectedHealth = val;
+  ['green','amber','red','na'].forEach(h => {
+    const el = document.getElementById("hopt_" + h);
+    if (el) el.className = "health-picker-opt" + (val === h ? " selected-" + (h === 'na' ? 'na' : h) : "");
+  });
+}
+
+function saveHealthStatus() {
+  if (!healthContext) return;
+  const { dealerName, productKey } = healthContext;
+  if (!state.dealerHealth[dealerName]) state.dealerHealth[dealerName] = {};
+  if (selectedHealth) {
+    state.dealerHealth[dealerName][productKey] = selectedHealth;
+  } else {
+    delete state.dealerHealth[dealerName][productKey];
+  }
+  closeHealthModal();
+  openDealerCards.add(dealerName);
+  saveState(); renderAll();
+  toast(selectedHealth ? `Health set to ${selectedHealth} for ${productKey.toUpperCase()}` : "Health status cleared.");
+}
+
 // ══════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════
@@ -2565,6 +2858,7 @@ document.getElementById("finMasterModalOverlay").addEventListener("click", e => 
 document.getElementById("dealerMasterModalOverlay").addEventListener("click", e => { if (e.target===e.currentTarget) closeDealerMasterModal(); });
 document.getElementById("confirmDealerMasterOverlay").addEventListener("click", e => { if (e.target===e.currentTarget) closeConfirmDealerMasterModal(); });
 document.getElementById("fiPolicyModalOverlay").addEventListener("click", function(e) { if (e.target===e.currentTarget) closeFIPolicyModal(); });
+document.getElementById("healthModalOverlay").addEventListener("click", e => { if (e.target===e.currentTarget) closeHealthModal(); });
 document.addEventListener("click", e => {
   const wrap = document.getElementById("dealerPickerWrap");
   if (wrap && !wrap.contains(e.target)) document.getElementById("dealerPickerDropdown").classList.remove("open");
