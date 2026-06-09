@@ -7,35 +7,52 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f5f4f0; --surface: #ffffff; --surface2: #f0efe9; --border: #e2e0d8;
-    --text: #1a1916; --text-muted: #6b6960; --text-hint: #9e9c94;
-    --accent: #1d4ed8; --green: #16a34a;
-    --cat-a: #14532d; --cat-a-bg: #dcfce7; --cat-a-border: #86efac;
-    --cat-b: #16a34a; --cat-b-bg: #f0fdf4; --cat-b-border: #bbf7d0;
-    --cat-c: #c2410c; --cat-c-bg: #fff7ed; --cat-c-border: #fdba74;
-    --cat-d: #dc2626; --cat-d-bg: #fef2f2; --cat-d-border: #fecaca;
-    --flag: #dc2626; --flag-bg: #fef2f2; --flag-border: #fecaca;
-    --ok: #15803d; --ok-bg: #f0fdf4; --ok-border: #bbf7d0;
+    /* ── Elegant Dark Theme ── */
+    --bg: #0d0f18;
+    --surface: #161927;
+    --surface2: #1e2235;
+    --surface3: #242840;
+    --border: #2a2f4a;
+    --border-light: #353b58;
+    --text: #e2e5f0;
+    --text-muted: #8891b0;
+    --text-hint: #4e556e;
+    --accent: #818cf8;
+    --accent-hover: #6366f1;
+    --accent-light: rgba(129,140,248,0.12);
+    --green: #34d399;
 
-    --health-green-bg: #dcfce7; --health-green-border: #16a34a; --health-green-text: #14532d;
-    --health-amber-bg: #fff7ed; --health-amber-border: #d97706; --health-amber-text: #c2410c;
-    --health-red-bg:   #fef2f2; --health-red-border:   #dc2626; --health-red-text:   #991b1b;
+    /* Category */
+    --cat-a: #34d399; --cat-a-bg: #022c22; --cat-a-border: #065f46;
+    --cat-b: #86efac; --cat-b-bg: #031a11; --cat-b-border: #14532d;
+    --cat-c: #fbbf24; --cat-c-bg: #1c1200; --cat-c-border: #78350f;
+    --cat-d: #f87171; --cat-d-bg: #1c0505; --cat-d-border: #7f1d1d;
+
+    /* Status */
+    --flag: #f87171; --flag-bg: #1c0505; --flag-border: #7f1d1d;
+    --ok: #34d399;   --ok-bg: #022c22;   --ok-border: #065f46;
+
+    /* Health */
+    --health-green-bg: #022c22; --health-green-border: #34d399; --health-green-text: #34d399;
+    --health-amber-bg: #1c1200; --health-amber-border: #fbbf24; --health-amber-text: #fbbf24;
+    --health-red-bg:   #1c0505; --health-red-border:   #f87171; --health-red-text:   #f87171;
+
     --radius: 10px; --radius-sm: 6px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --shadow: 0 1px 4px rgba(0,0,0,0.5);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.6);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; }
 
   /* ── HEADER ── */
-  .header { background: var(--text); color: white; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
+  .header { background: var(--surface); color: var(--text); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
   .header-left { display: flex; align-items: center; gap: 10px; }
   .logo-badge { background: #f59e0b; color: #1a1916; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
   .header-nav { display: flex; gap: 2px; margin-left: 8px; }
-  .nav-btn { background: none; border: none; color: rgba(255,255,255,0.55); font-size: 13px; font-family: inherit; padding: 6px 14px; border-radius: 6px; cursor: pointer; transition: all 0.15s; font-weight: 500; }
-  .nav-btn:hover { background: rgba(255,255,255,0.08); color: white; }
-  .nav-btn.active { background: rgba(255,255,255,0.15); color: white; }
-  .save-indicator { font-size: 11px; color: rgba(255,255,255,0.45); font-family: 'DM Mono', monospace; display: flex; align-items: center; gap: 5px; }
+  .nav-btn { background: none; border: none; color: var(--text-muted); font-size: 13px; font-family: inherit; padding: 6px 14px; border-radius: 6px; cursor: pointer; transition: all 0.15s; font-weight: 500; }
+  .nav-btn:hover { background: var(--surface2); color: var(--text); }
+  .nav-btn.active { background: var(--accent-light); color: var(--accent); }
+  .save-indicator { font-size: 11px; color: var(--text-hint); font-family: 'DM Mono', monospace; display: flex; align-items: center; gap: 5px; }
   .save-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; flex-shrink: 0; }
 
   /* ── PAGES ── */
@@ -77,9 +94,9 @@
   .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; position: sticky; bottom: 0; background: var(--surface); }
   .form-group { margin-bottom: 18px; }
   .form-label { font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.4px; }
-  .form-select { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; font-size: 13px; font-family: inherit; background: var(--surface); outline: none; }
-  .form-select:focus { border-color: var(--accent); }
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: white; padding: 12px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 500; box-shadow: var(--shadow-md); transform: translateY(60px); opacity: 0; transition: all 0.25s; z-index: 400; display: flex; align-items: center; gap: 8px; }
+  .form-select { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; font-size: 13px; font-family: inherit; background: var(--surface2); color: var(--text); outline: none; }
+  .form-select:focus { border-color: var(--accent); background: var(--surface3); }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface3); color: var(--text); border: 1px solid var(--border-light); padding: 12px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 500; box-shadow: var(--shadow-md); transform: translateY(60px); opacity: 0; transition: all 0.25s; z-index: 400; display: flex; align-items: center; gap: 8px; }
   .toast.show { transform: translateY(0); opacity: 1; }
   .toast-dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; flex-shrink: 0; }
   .empty-state { text-align: center; padding: 60px 20px; color: var(--text-hint); }
@@ -96,7 +113,7 @@
   .stat-sub { font-size: 11px; color: var(--text-hint); margin-top: 4px; }
   .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
   .toolbar-title { font-size: 15px; font-weight: 600; flex: 1; min-width: 160px; }
-  .search-box { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 12px; font-size: 13px; font-family: inherit; background: var(--surface); outline: none; width: 210px; transition: border-color 0.15s; }
+  .search-box { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 12px; font-size: 13px; font-family: inherit; background: var(--surface2); color: var(--text); outline: none; width: 210px; transition: border-color 0.15s; }
   .search-box:focus { border-color: var(--accent); }
   .filter-select { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 13px; font-family: inherit; background: var(--surface); outline: none; cursor: pointer; }
 
@@ -106,13 +123,13 @@
   .dealer-picker-btn:hover { background: #1e40af; }
   .dealer-picker-dropdown { display: none; position: absolute; top: calc(100% + 6px); left: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-md); z-index: 150; width: 320px; overflow: hidden; }
   .dealer-picker-dropdown.open { display: block; }
-  .dealer-picker-search { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+  .dealer-picker-search { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--surface3); }
   .dealer-picker-search input { flex: 1; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 10px; font-size: 13px; font-family: inherit; outline: none; background: var(--surface); }
   .dealer-picker-search input:focus { border-color: var(--accent); }
   .dealer-picker-list { max-height: 280px; overflow-y: auto; }
   .dealer-picker-item { padding: 9px 14px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.1s; }
   .dealer-picker-item:last-child { border-bottom: none; }
-  .dealer-picker-item:hover { background: var(--surface2); }
+  .dealer-picker-item:hover { background: var(--surface3); }
   .dealer-picker-item-name { font-size: 13px; font-weight: 500; color: var(--text); }
   .dealer-picker-item-loc { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
   .dealer-picker-empty { padding: 20px; text-align: center; color: var(--text-hint); font-size: 13px; }
@@ -122,15 +139,15 @@
   .dealer-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: box-shadow 0.15s; }
   .dealer-card:hover { box-shadow: var(--shadow-md); }
   .dealer-header { display: flex; align-items: center; padding: 10px 14px; cursor: pointer; gap: 10px; user-select: none; }
-  .dealer-avatar { width: 28px; height: 28px; border-radius: 6px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+  .dealer-avatar { width: 28px; height: 28px; border-radius: 6px; background: var(--surface3); border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
   .dealer-info { flex: 1; }
   .dealer-name { font-weight: 600; font-size: 13px; line-height: 1.3; }
   .dealer-rm { font-size: 11px; color: var(--text-muted); line-height: 1.2; }
   .dealer-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .dealer-card.open .chevron { transform: rotate(180deg); }
-  .dealer-body { display: none; border-top: 1px solid var(--border); }
+  .dealer-body { display: none; border-top: 1px solid var(--border); background: var(--surface); }
   .dealer-card.open .dealer-body { display: block; }
-  .fin-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--surface2); border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
+  .fin-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--surface3); border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
   .fin-toolbar-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
   .fin-list { padding: 0; }
   .fin-row { border-bottom: 1px solid var(--border); }
@@ -151,8 +168,8 @@
   .status-disabled { font-size: 12px; color: var(--text-hint); }
   .fin-empty { padding: 24px 18px; color: var(--text-hint); font-size: 13px; text-align: center; }
   .product-config-list { display: flex; flex-direction: column; gap: 10px; }
-  .product-config-row { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; background: var(--surface2); transition: background 0.12s, border-color 0.12s; }
-  .product-config-row.active { background: var(--surface); border-color: #bfcff8; }
+  .product-config-row { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; background: var(--surface3); transition: background 0.12s, border-color 0.12s; }
+  .product-config-row.active { background: var(--surface2); border-color: var(--accent); }
   .product-config-top { display: flex; align-items: center; gap: 10px; }
   .product-config-top input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
   .product-config-name { font-family: 'DM Mono', monospace; font-weight: 600; font-size: 13px; flex: 1; }
@@ -175,19 +192,19 @@
   .sum-sub { font-size: 11px; color: var(--text-hint); margin-top: 4px; }
   .sum-flag { color: var(--flag); }
   .sum-ok { color: var(--ok); }
-  .view-toggle { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px; width: fit-content; box-shadow: var(--shadow); }
+  .view-toggle { display: flex; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px; width: fit-content; box-shadow: var(--shadow); }
   .toggle-btn { padding: 7px 20px; border-radius: 5px; border: none; font-size: 13px; font-family: inherit; font-weight: 500; cursor: pointer; background: none; color: var(--text-muted); transition: all 0.15s; }
-  .toggle-btn.active { background: var(--text); color: white; }
+  .toggle-btn.active { background: var(--accent); color: white; }
   .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
   .filter-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
   .filter-chip { display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 100px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.12s; color: var(--text-muted); font-family: 'DM Mono', monospace; }
   .filter-chip:hover { border-color: #b0ada4; }
-  .filter-chip.active { background: var(--text); color: white; border-color: var(--text); }
+  .filter-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
   .show-flagged-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); cursor: pointer; user-select: none; }
   .show-flagged-toggle input { width: 15px; height: 15px; accent-color: var(--flag); cursor: pointer; }
   .product-section { margin-bottom: 28px; }
   .product-section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-  .product-tag { font-family: 'DM Mono', monospace; font-weight: 600; font-size: 13px; background: var(--text); color: white; padding: 4px 12px; border-radius: 6px; }
+  .product-tag { font-family: 'DM Mono', monospace; font-weight: 600; font-size: 13px; background: var(--accent); color: white; padding: 4px 12px; border-radius: 6px; }
   .product-section-meta { font-size: 12px; color: var(--text-muted); }
   .flag-count { color: var(--flag); font-weight: 600; }
   .ok-count { color: var(--ok); font-weight: 600; }
@@ -217,15 +234,15 @@
   .stats-modal-title { font-size: 16px; font-weight: 600; }
   .stats-modal-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
   .stats-modal-body { overflow-y: auto; padding: 24px; flex: 1; }
-  .stats-tab-bar { display: flex; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px; width: fit-content; margin-bottom: 24px; }
+  .stats-tab-bar { display: flex; background: var(--surface3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px; width: fit-content; margin-bottom: 24px; }
   .stats-tab { padding: 6px 18px; border-radius: 5px; border: none; font-size: 13px; font-family: inherit; font-weight: 500; cursor: pointer; background: none; color: var(--text-muted); transition: all 0.15s; }
-  .stats-tab.active { background: var(--text); color: white; }
+  .stats-tab.active { background: var(--accent); color: white; }
   .stats-section { display: none; }
   .stats-section.active { display: block; }
   .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; }
   .stats-chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
   .stats-chart-title { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-  .stats-chart-tag { font-family: 'DM Mono', monospace; background: var(--text); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+  .stats-chart-tag { font-family: 'DM Mono', monospace; background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
   .bar-group { display: flex; flex-direction: column; gap: 10px; }
   .bar-row { display: flex; align-items: center; gap: 10px; }
   .bar-label { font-size: 11px; font-weight: 700; width: 18px; text-align: center; flex-shrink: 0; }
@@ -407,7 +424,7 @@
   .confirm-modal-sub { font-size:13px; color:var(--text-muted); line-height:1.5; }
   .confirm-modal-dealer { font-weight:600; color:var(--text); }
   .confirm-modal-footer { padding:16px 24px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:center; }
-  .fip-view-field { font-size:13px;color:var(--text);padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);min-height:36px;line-height:1.4; }
+  .fip-view-field { font-size:13px;color:var(--text);padding:8px 12px;background:var(--surface3);border:1px solid var(--border);border-radius:var(--radius-sm);min-height:36px;line-height:1.4; }
   .fip-product-btn { display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:11px;font-weight:600;font-family:'DM Mono',monospace;cursor:pointer;transition:all 0.12s; }
   .fip-product-btn:hover { box-shadow:var(--shadow); }
   .fip-product-btn.defined { border-color:var(--cat-b-border);background:var(--cat-b-bg);color:var(--cat-b); }
@@ -434,6 +451,60 @@
   .health-picker-opt.selected-red   { border-color:#dc2626;background:#fef2f2;color:#dc2626; }
   .health-picker-opt.selected-na    { border-color:#9ca3af;background:#f3f4f6;color:#6b7280; }
 
+
+  /* ── Dark theme select/option fix ── */
+  select.form-select, select.filter-select {
+    background: var(--surface2);
+    color: var(--text);
+    border-color: var(--border);
+  }
+  select.form-select option, select.filter-select option {
+    background: #1e2235;
+    color: #e2e5f0;
+  }
+  select.form-select:focus, select.filter-select:focus {
+    border-color: var(--accent);
+    background: var(--surface3);
+  }
+  input[type="text"].form-select,
+  input[type="number"].form-select,
+  textarea.form-select {
+    background: var(--surface2);
+    color: var(--text);
+    border-color: var(--border);
+  }
+  input[type="text"].form-select::placeholder,
+  input[type="number"].form-select::placeholder,
+  textarea.form-select::placeholder {
+    color: var(--text-hint);
+  }
+  input[type="text"].form-select:focus,
+  input[type="number"].form-select:focus,
+  textarea.form-select:focus {
+    background: var(--surface3);
+    border-color: var(--accent);
+  }
+  .filter-select {
+    background: var(--surface2);
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .filter-select option {
+    background: #1e2235;
+    color: #e2e5f0;
+  }
+  .dealer-picker-search input {
+    background: var(--surface2);
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .dealer-picker-search input::placeholder { color: var(--text-hint); }
+  .dealer-picker-item { color: var(--text); }
+  .dealer-picker-item-name { color: var(--text); }
+  .dealer-picker-item-loc { color: var(--text-muted); }
+  .dealer-picker-dropdown { background: var(--surface2); border-color: var(--border); }
+  .dealer-picker-list { background: var(--surface2); }
+
 </style>
 </head>
 <body>
@@ -443,13 +514,15 @@
   <div class="header-left">
     <span style="font-weight:600;font-size:15px;">Euler Motors</span>
     <span class="logo-badge">VF</span>
-    <span style="color:rgba(255,255,255,0.2);margin:0 4px;">|</span>
+    <span style="color:var(--border-light);margin:0 4px;">|</span>
     <nav class="header-nav">
       <button class="nav-btn active" id="navDealer" onclick="switchPage('dealer')">Dealer Dashboard</button>
-      <button class="nav-btn" id="navCoverage" style="opacity:0.4;cursor:not-allowed;" title="Coming soon" onclick="event.preventDefault();">Coverage Gaps</button>
       <button class="nav-btn" id="navFinancier" onclick="switchPage('financier')">FI Master List</button>
       <button class="nav-btn" id="navDealerMaster" onclick="switchPage('dealermaster')">Dealer Master List</button>
       <button class="nav-btn" id="navFIPolicy" onclick="switchPage('fipolicy')">FI Policy</button>
+      <button class="nav-btn" id="navCoverage" style="opacity:0.4;cursor:not-allowed;" title="Coming soon" onclick="event.preventDefault();">Coverage Gaps</button>
+      <button class="nav-btn" id="navTAIF" onclick="switchPage('taif')">TA/IF Status (Dealer Level)</button>
+      <button class="nav-btn" id="navMatcher" onclick="switchPage('matcher')" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-weight:600;">⚡ Loan Eligibility</button>
     </nav>
   </div>
   <div class="save-indicator">
@@ -1063,6 +1136,76 @@
   </div>
 </div>
 
+<!-- ════════════════════════════════════════════════════════════
+     PAGE 6 — TA/IF STATUS (DEALER LEVEL)
+════════════════════════════════════════════════════════════ -->
+<div class="page" id="pageTAIF">
+<div class="container">
+  <div class="page-header">
+    <div class="page-title">TA/IF Status (Dealer Level)</div>
+    <div class="page-sub">Track TA and IF status per dealer per financier. Content to be defined.</div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center;padding:80px 20px;color:var(--text-hint);flex-direction:column;gap:12px;">
+    <div style="font-size:48px;">🚧</div>
+    <div style="font-size:16px;font-weight:600;color:var(--text-muted);">Coming Soon</div>
+    <div style="font-size:13px;">This dashboard is under construction. Content will be defined shortly.</div>
+  </div>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PAGE 7 — LOAN ELIGIBILITY MATCHER
+════════════════════════════════════════════════════════════ -->
+<div class="page" id="pageMatcher">
+<div class="container">
+  <div class="page-header">
+    <div class="page-title">⚡ Loan Eligibility Matcher</div>
+    <div class="page-sub">Enter customer profile to find matching financiers available at a dealer for a selected product.</div>
+  </div>
+
+  <!-- Step 1: Dealer + Product + Type -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow);">
+    <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Step 1 — Select Dealer, Product & Customer Type</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Dealer <span style="color:var(--flag);">*</span></label>
+        <select class="form-select" id="matcherDealer" onchange="onMatcherDealerChange()"><option value="">— Select Dealer —</option></select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Product <span style="color:var(--flag);">*</span></label>
+        <select class="form-select" id="matcherProduct" onchange="runMatcher()">
+          <option value="">— Select Product —</option>
+          ${PRODUCTS ? '' : ''}
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Customer Type <span style="color:var(--flag);">*</span></label>
+        <select class="form-select" id="matcherType" onchange="onMatcherTypeChange()">
+          <option value="">— Select Type —</option>
+          <option value="ind">Individual</option>
+          <option value="co">Company Owned</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Customer Profile -->
+  <div id="matcherProfileSection" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Step 2 — Customer Profile</div>
+      <button class="btn btn-primary btn-sm" onclick="runMatcher()">🔍 Find Matching FIs</button>
+    </div>
+    <div id="matcherProfileFields" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;"></div>
+  </div>
+
+  <!-- Results -->
+  <div id="matcherResults" style="display:none;">
+    <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Results</div>
+    <div id="matcherResultsContent"></div>
+  </div>
+</div>
+</div>
+
 <!-- ── ADD/EDIT FINANCIER MODAL ── -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
@@ -1284,11 +1427,16 @@ function switchPage(page) {
   document.getElementById("pageFinancier").classList.toggle("active", page === 'financier');
   document.getElementById("pageDealerMaster").classList.toggle("active", page === 'dealermaster');
   document.getElementById("pageFIPolicy").classList.toggle("active", page === 'fipolicy');
+  document.getElementById("pageTAIF").classList.toggle("active", page === 'taif');
+  document.getElementById("pageMatcher").classList.toggle("active", page === 'matcher');
   document.getElementById("navDealer").classList.toggle("active", page === 'dealer');
   document.getElementById("navCoverage").classList.toggle("active", page === 'coverage');
   document.getElementById("navFinancier").classList.toggle("active", page === 'financier');
   document.getElementById("navDealerMaster").classList.toggle("active", page === 'dealermaster');
   document.getElementById("navFIPolicy").classList.toggle("active", page === 'fipolicy');
+  document.getElementById("navTAIF").classList.toggle("active", page === 'taif');
+  document.getElementById("navMatcher").classList.toggle("active", page === 'matcher');
+  if (page === 'matcher') { initMatcher(); }
   if (page === 'coverage') { renderSummary(); renderGap(); }
   if (page === 'financier') { renderFinancierMaster(); }
   if (page === 'dealermaster') { renderDealerMaster(); }
@@ -2842,6 +2990,232 @@ function saveHealthStatus() {
   openDealerCards.add(dealerName);
   saveState(); renderAll();
   toast(selectedHealth ? `Health set to ${selectedHealth} for ${productKey.toUpperCase()}` : "Health status cleared.");
+}
+
+// ══════════════════════════════════════════════════════════════
+// PAGE 7 — LOAN ELIGIBILITY MATCHER
+// ══════════════════════════════════════════════════════════════
+
+const MATCHER_IND_FIELDS = [
+  { key:'minCibil',      label:'CIBIL Score',          type:'number', placeholder:'e.g. 720' },
+  { key:'maxLoan',       label:'Loan Amount Required (₹)', type:'number', placeholder:'e.g. 300000' },
+  { key:'residence',     label:'Residence Type',        type:'select', opts:['Rented','Own'] },
+  { key:'guarantor',     label:'Has Guarantor?',        type:'select', opts:['Yes','No'] },
+  { key:'bankStatement', label:'L6M Bank Statement',    type:'select', opts:['Yes','No'] },
+  { key:'licenseType',   label:'License Type',          type:'select', opts:['DL','LLR'] },
+  { key:'ntc',           label:'New to Credit (NTC)?',  type:'select', opts:['Yes','No'] }
+];
+
+const MATCHER_CO_FIELDS = [
+  { key:'minCibil',          label:'CIBIL Score',              type:'number', placeholder:'e.g. 720' },
+  { key:'maxLoan',           label:'Loan Amount Required (₹)', type:'number', placeholder:'e.g. 500000' },
+  { key:'companyProperty',   label:'Company Property',         type:'select', opts:['Rented','Own'] },
+  { key:'personalResidence', label:'Personal Residence',       type:'select', opts:['Rented','Own'] },
+  { key:'guarantor',         label:'Has Guarantor?',           type:'select', opts:['Yes','No'] },
+  { key:'annualTurnover',    label:'Annual Turnover (₹)',      type:'number', placeholder:'e.g. 1200000' },
+  { key:'vintage',           label:'Business Vintage (years)', type:'number', placeholder:'e.g. 3' },
+  { key:'existingFleet',     label:'Has Existing Fleet?',      type:'select', opts:['Yes','No'] },
+  { key:'ntc',               label:'New to Credit (NTC)?',     type:'select', opts:['Yes','No'] }
+];
+
+function initMatcher() {
+  // Populate dealer dropdown from added dealers
+  var sel = document.getElementById("matcherDealer");
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">— Select Dealer —</option>' +
+    state.addedDealers.map(function(d) {
+      var label = (d.dealer === 'COCO' ? 'COCO - ' + d.location : d.dealer) + ' (' + d.location + ')';
+      return '<option value="' + escHtml(d.dealer) + '" ' + (d.dealer === cur ? 'selected' : '') + '>' + escHtml(label) + '</option>';
+    }).join('');
+
+  // Populate product dropdown
+  var psel = document.getElementById("matcherProduct");
+  var pcur = psel.value;
+  psel.innerHTML = '<option value="">— Select Product —</option>' +
+    PRODUCTS.map(function(p) {
+      return '<option value="' + p.key + '" ' + (p.key === pcur ? 'selected' : '') + '>' + p.label + '</option>';
+    }).join('');
+
+  // Clear results
+  document.getElementById("matcherResults").style.display = 'none';
+}
+
+function onMatcherDealerChange() {
+  document.getElementById("matcherResults").style.display = 'none';
+  var type = document.getElementById("matcherType").value;
+  var product = document.getElementById("matcherProduct").value;
+  if (type && product) runMatcher();
+}
+
+function onMatcherTypeChange() {
+  var type = document.getElementById("matcherType").value;
+  var profileSection = document.getElementById("matcherProfileSection");
+  var fieldsDiv = document.getElementById("matcherProfileFields");
+  document.getElementById("matcherResults").style.display = 'none';
+
+  if (!type) { profileSection.style.display = 'none'; return; }
+
+  profileSection.style.display = '';
+  var fields = type === 'ind' ? MATCHER_IND_FIELDS : MATCHER_CO_FIELDS;
+
+  fieldsDiv.innerHTML = fields.map(function(f) {
+    var input = f.type === 'number'
+      ? '<input type="number" class="form-select" id="mc_' + f.key + '" placeholder="' + (f.placeholder||'') + '" min="0" oninput="runMatcher()">'
+      : '<select class="form-select" id="mc_' + f.key + '" onchange="runMatcher()"><option value="">— Select —</option>' +
+        f.opts.map(function(o){ return '<option>' + o + '</option>'; }).join('') + '</select>';
+    return '<div class="form-group" style="margin:0;"><label class="form-label">' + escHtml(f.label) + '</label>' + input + '</div>';
+  }).join('');
+}
+
+function getCustomerProfile(type) {
+  var fields = type === 'ind' ? MATCHER_IND_FIELDS : MATCHER_CO_FIELDS;
+  var profile = {};
+  fields.forEach(function(f) {
+    var el = document.getElementById('mc_' + f.key);
+    profile[f.key] = el ? el.value.trim() : '';
+  });
+  return profile;
+}
+
+function checkEligibility(policy, profile, type) {
+  // Returns { eligible: bool, issues: [], matches: [] }
+  var issues = [];
+  var matches = [];
+  var seg = policy[type] || {};
+  if (!policy[type + '_applicable']) return { status: 'na', issues: ['Not applicable for ' + (type==='ind'?'Individual':'Company Owned')], matches: [] };
+
+  function check(policyVal, customerVal, label, mode) {
+    if (!policyVal || policyVal === '' || policyVal === '—') return; // policy field not set — skip
+    if (!customerVal || customerVal === '') return; // customer field not filled — skip
+
+    if (mode === 'min_cibil') {
+      // customer CIBIL must be >= policy min CIBIL
+      if (Number(customerVal) >= Number(policyVal)) matches.push(label + ': ✓ (' + customerVal + ' ≥ ' + policyVal + ')');
+      else issues.push(label + ': CIBIL ' + customerVal + ' < required ' + policyVal);
+    } else if (mode === 'max_loan') {
+      // loan amount customer wants must be <= policy max loan
+      if (Number(customerVal) <= Number(policyVal)) matches.push(label + ': ✓');
+      else issues.push(label + ': Required ₹' + Number(customerVal).toLocaleString('en-IN') + ' > max ₹' + Number(policyVal).toLocaleString('en-IN'));
+    } else if (mode === 'min_vintage') {
+      if (Number(customerVal) >= Number(policyVal)) matches.push(label + ': ✓');
+      else issues.push(label + ': ' + customerVal + ' yrs < required ' + policyVal + ' yrs');
+    } else if (mode === 'min_turnover') {
+      if (Number(customerVal) >= Number(policyVal)) matches.push(label + ': ✓');
+      else issues.push(label + ': ₹' + Number(customerVal).toLocaleString('en-IN') + ' < required ₹' + Number(policyVal).toLocaleString('en-IN'));
+    } else if (mode === 'match_or_either') {
+      // policy is "Either Scenario" = always ok; else must match
+      if (policyVal === 'Either Scenario') matches.push(label + ': ✓ (Either Scenario)');
+      else if (customerVal === policyVal) matches.push(label + ': ✓');
+      else issues.push(label + ': Customer has ' + customerVal + ', FI requires ' + policyVal);
+    } else if (mode === 'ntc') {
+      // if customer is NTC, FI must offer NTC loans
+      if (customerVal === 'Yes' && policyVal === 'No') issues.push('NTC: FI does not provide NTC loans');
+      else matches.push('NTC: ✓');
+    }
+  }
+
+  check(seg.minCibil,          profile.minCibil,          'Min CIBIL',          'min_cibil');
+  check(seg.maxLoan,           profile.maxLoan,            'Max Loan Amount',    'max_loan');
+  check(seg.residence,         profile.residence,          'Residence',          'match_or_either');
+  check(seg.guarantor,         profile.guarantor,          'Guarantor',          'match_or_either');
+  check(seg.bankStatement,     profile.bankStatement,      'L6M Bank Statement', 'match_or_either');
+  check(seg.licenseType,       profile.licenseType,        'License Type',       'match_or_either');
+  check(seg.ntc,               profile.ntc,                'NTC',                'ntc');
+  check(seg.companyProperty,   profile.companyProperty,    'Company Property',   'match_or_either');
+  check(seg.personalResidence, profile.personalResidence,  'Personal Residence', 'match_or_either');
+  check(seg.vintage,           profile.vintage,            'Vintage',            'min_vintage');
+  check(seg.annualTurnover,    profile.annualTurnover,     'Annual Turnover',    'min_turnover');
+
+  var status = issues.length === 0 && matches.length > 0 ? 'eligible'
+             : issues.length === 0 && matches.length === 0 ? 'unknown'
+             : matches.length > 0 ? 'partial' : 'ineligible';
+  return { status: status, issues: issues, matches: matches };
+}
+
+function runMatcher() {
+  var dealerName = document.getElementById("matcherDealer").value;
+  var productKey = document.getElementById("matcherProduct").value;
+  var type       = document.getElementById("matcherType").value;
+
+  if (!dealerName || !productKey || !type) {
+    document.getElementById("matcherResults").style.display = 'none';
+    return;
+  }
+
+  var profile = getCustomerProfile(type);
+  var fins = getDealerFinanciers(dealerName);
+
+  // Filter FIs onboarded for this product
+  var onboardedFIs = Object.entries(fins).filter(function(e) {
+    var pd = e[1].products[productKey];
+    return pd && pd.enabled;
+  });
+
+  if (!onboardedFIs.length) {
+    document.getElementById("matcherResults").style.display = '';
+    document.getElementById("matcherResultsContent").innerHTML =
+      '<div style="padding:24px;text-align:center;color:var(--text-hint);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">No financiers are onboarded at this dealer for the selected product.</div>';
+    return;
+  }
+
+  var eligible = [], partial = [], ineligible = [], unknown = [];
+
+  onboardedFIs.forEach(function(e) {
+    var finName = e[0];
+    var policy = (state.fiPolicy[finName] || {})[productKey];
+    if (!policy) { unknown.push({ name: finName, result: { status: 'unknown', issues: [], matches: [] } }); return; }
+    var result = checkEligibility(policy, profile, type);
+    if (result.status === 'eligible')   eligible.push({ name: finName, result: result });
+    else if (result.status === 'partial')    partial.push({ name: finName, result: result });
+    else if (result.status === 'ineligible') ineligible.push({ name: finName, result: result });
+    else unknown.push({ name: finName, result: result });
+  });
+
+  function renderFICard(item, color, icon, label) {
+    var meta = state.financiersMeta.find(function(m){ return m.name === item.name; }) || {};
+    var matchChips = item.result.matches.map(function(m){
+      return '<span style="font-size:10px;background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-border);border-radius:4px;padding:1px 6px;">' + escHtml(m) + '</span>';
+    }).join('');
+    var issueChips = item.result.issues.map(function(m){
+      return '<span style="font-size:10px;background:var(--cat-d-bg);color:var(--cat-d);border:1px solid var(--cat-d-border);border-radius:4px;padding:1px 6px;">' + escHtml(m) + '</span>';
+    }).join('');
+    return '<div style="background:var(--surface);border:1px solid ' + color + ';border-left:4px solid ' + color + ';border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">' +
+        '<span style="font-size:16px;">' + icon + '</span>' +
+        '<span style="font-weight:600;font-size:13px;">' + escHtml(item.name) + '</span>' +
+        '<span class="badge badge-count">' + escHtml(meta.category||'—') + '</span>' +
+        '<span class="badge" style="margin-left:auto;background:' + color + '1a;color:' + color + ';border:1px solid ' + color + ';">' + label + '</span>' +
+      '</div>' +
+      (matchChips || issueChips ? '<div style="display:flex;flex-wrap:wrap;gap:4px;">' + matchChips + issueChips + '</div>' : '') +
+    '</div>';
+  }
+
+  var html = '';
+
+  if (eligible.length) {
+    html += '<div style="font-size:12px;font-weight:700;color:var(--ok);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">✅ Eligible (' + eligible.length + ')</div>';
+    eligible.forEach(function(i){ html += renderFICard(i, '#16a34a', '✅', 'Eligible'); });
+    html += '<div style="margin-bottom:16px;"></div>';
+  }
+  if (partial.length) {
+    html += '<div style="font-size:12px;font-weight:700;color:var(--cat-c);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">⚠ Partial Match (' + partial.length + ')</div>';
+    partial.forEach(function(i){ html += renderFICard(i, '#d97706', '⚠️', 'Partial Match'); });
+    html += '<div style="margin-bottom:16px;"></div>';
+  }
+  if (unknown.length) {
+    html += '<div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">❓ Policy Not Defined (' + unknown.length + ')</div>';
+    unknown.forEach(function(i){ html += renderFICard(i, '#9ca3af', '❓', 'No Policy'); });
+    html += '<div style="margin-bottom:16px;"></div>';
+  }
+  if (ineligible.length) {
+    html += '<div style="font-size:12px;font-weight:700;color:var(--cat-d);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">❌ Not Eligible (' + ineligible.length + ')</div>';
+    ineligible.forEach(function(i){ html += renderFICard(i, '#dc2626', '❌', 'Not Eligible'); });
+  }
+
+  if (!html) html = '<div style="padding:24px;text-align:center;color:var(--text-hint);">Fill in the customer profile above to see results.</div>';
+
+  document.getElementById("matcherResults").style.display = '';
+  document.getElementById("matcherResultsContent").innerHTML = html;
 }
 
 // ══════════════════════════════════════════════════════════════
