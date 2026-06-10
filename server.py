@@ -178,19 +178,10 @@ if __name__ == "__main__":
         get_sheet()
     except Exception as e:
         print(f"\n  ❌ Google Sheets connection FAILED: {e}")
-        print("  Check credentials.json and make sure the sheet is shared with the service account.")
-        print("  Server will still start but API calls will fail.\n")
+        print("  Check GOOGLE_CREDENTIALS environment variable.")
 
-    local_ip = socket.gethostbyname(socket.gethostname())
-    print()
-    print("  ┌─────────────────────────────────────────────┐")
-    print("  │   Euler Motors VF Dashboard                 │")
-    print("  ├─────────────────────────────────────────────┤")
-    print(f"  │   Local:    http://localhost:{PORT}           │")
-    print(f"  │   Network:  http://{local_ip}:{PORT}".ljust(47) + "│")
-    print("  │   Backend:  Google Sheets                   │")
-    print("  │   Press Ctrl+C to stop                      │")
-    print("  └─────────────────────────────────────────────┘\n")
+    print(f"\n  ✅ Server starting on port {PORT}")
+    print(f"  Open: http://localhost:{PORT}/euler_vf.html\n")
 
     server = HTTPServer(("0.0.0.0", PORT), Handler)
     try:
