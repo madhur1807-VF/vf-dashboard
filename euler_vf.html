@@ -433,12 +433,14 @@
 
   /* Health status */
   .health-dot { width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0; }
+  .health-star  { background:#f59e0b; box-shadow: 0 0 4px #f59e0b; }
   .health-green { background:#16a34a; }
   .health-amber { background:#d97706; }
   .health-red   { background:#dc2626; }
   .health-none  { background:#d1d5db; }
   .health-btn { display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;border:1px solid var(--border);background:var(--surface);font-size:11px;font-weight:500;cursor:pointer;transition:all 0.12s;color:var(--text-muted); }
   .health-btn:hover { border-color:#b0ada4; }
+  .health-btn.star  { background:#1c1200;border-color:#f59e0b;color:#f59e0b; }
   .health-btn.green { background:#f0fdf4;border-color:#86efac;color:#14532d; }
   .health-btn.amber { background:#fff7ed;border-color:#fdba74;color:#c2410c; }
   .health-btn.red   { background:#fef2f2;border-color:#fecaca;color:#dc2626; }
@@ -446,6 +448,7 @@
   .health-picker { display:flex;gap:10px;margin-top:8px; }
   .health-picker-opt { display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:8px;border:2px solid var(--border);cursor:pointer;font-size:13px;font-weight:500;transition:all 0.12s;flex:1;justify-content:center; }
   .health-picker-opt:hover { border-color:#b0ada4; }
+  .health-picker-opt.selected-star  { border-color:#f59e0b;background:#1c1200;color:#f59e0b; }
   .health-picker-opt.selected-green { border-color:#16a34a;background:#f0fdf4;color:#14532d; }
   .health-picker-opt.selected-amber { border-color:#d97706;background:#fff7ed;color:#c2410c; }
   .health-picker-opt.selected-red   { border-color:#dc2626;background:#fef2f2;color:#dc2626; }
@@ -531,7 +534,7 @@
 <div id="appLoader">
   <div class="loader-logo">Euler Motors <span>VF</span></div>
   <div class="loader-spinner"></div>
-  <div class="loader-text" id="loaderText">Loading data from Google Sheets…</div>
+  <div class="loader-text" id="loaderText">Loading data…</div>
 </div>
 
 <div class="header">
@@ -578,6 +581,7 @@
     <select class="filter-select" id="filterFinancier" onchange="renderDealers()"><option value="">All Financiers</option></select>
     <select class="filter-select" id="filterHealth" onchange="renderDealers()">
       <option value="">All Health</option>
+      <option value="star">⭐ Star</option>
       <option value="green">🟢 Green</option>
       <option value="amber">🟡 Amber</option>
       <option value="red">🔴 Red</option>
@@ -585,18 +589,22 @@
     </select>
     <select class="filter-select" id="filterProductHealth" onchange="renderDealers()" style="max-width:200px;">
       <option value="">Product Health Filter</option>
+      <option value="3wc|star">3WC — ⭐ Star</option>
       <option value="3wc|green">3WC — 🟢 Green</option>
       <option value="3wc|amber">3WC — 🟡 Amber</option>
       <option value="3wc|red">3WC — 🔴 Red</option>
       <option value="3wc|na">3WC — N/A</option>
+      <option value="3wp|star">3WP — ⭐ Star</option>
       <option value="3wp|green">3WP — 🟢 Green</option>
       <option value="3wp|amber">3WP — 🟡 Amber</option>
       <option value="3wp|red">3WP — 🔴 Red</option>
       <option value="3wp|na">3WP — N/A</option>
+      <option value="4wc_storm|star">4WCS — ⭐ Star</option>
       <option value="4wc_storm|green">4WCS — 🟢 Green</option>
       <option value="4wc_storm|amber">4WCS — 🟡 Amber</option>
       <option value="4wc_storm|red">4WCS — 🔴 Red</option>
       <option value="4wc_storm|na">4WCS — N/A</option>
+      <option value="4wc_turbo|star">4WCT — ⭐ Star</option>
       <option value="4wc_turbo|green">4WCT — 🟢 Green</option>
       <option value="4wc_turbo|amber">4WCT — 🟡 Amber</option>
       <option value="4wc_turbo|red">4WCT — 🔴 Red</option>
@@ -1377,6 +1385,9 @@
     <div class="modal-body">
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Select the current financing health for this product at this dealer:</div>
       <div class="health-picker">
+        <div class="health-picker-opt" id="hopt_star" onclick="selectHealth('star')">
+          <span class="health-dot health-star"></span> ⭐ Star
+        </div>
         <div class="health-picker-opt" id="hopt_green" onclick="selectHealth('green')">
           <span class="health-dot health-green"></span> Green
         </div>
@@ -1866,7 +1877,7 @@ function renderDealerCard(d) {
       ${PRODUCTS.map(p => {
         const cnt = productFinCount[p.key];
         const h = dealerHealth[p.key];
-        const healthClass = (h === 'na') ? 'none' : (h || 'none');
+        const healthClass = (!h || h === 'na') ? 'none' : h;
         const healthLabel = h ? (h === 'na' ? 'N/A' : h.charAt(0).toUpperCase() + h.slice(1)) : '—';
         const finText = cnt > 0 ? `${cnt} FI${cnt!==1?'s':''}` : '—';
         return `<button class="health-btn ${healthClass}" style="font-family:'DM Mono',monospace;font-size:10px;gap:4px;" onclick="event.stopPropagation();openHealthModal('${escJs(d.dealer)}','${p.key}','${escJs(p.label)}')">
@@ -3336,9 +3347,9 @@ function closeHealthModal() {
 
 function selectHealth(val) {
   selectedHealth = val;
-  ['green','amber','red','na'].forEach(h => {
+  ['star','green','amber','red','na'].forEach(h => {
     const el = document.getElementById("hopt_" + h);
-    if (el) el.className = "health-picker-opt" + (val === h ? " selected-" + (h === 'na' ? 'na' : h) : "");
+    if (el) el.className = "health-picker-opt" + (val === h ? " selected-" + h : "");
   });
 }
 
