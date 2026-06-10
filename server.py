@@ -29,8 +29,10 @@ def get_sheet():
             # Support credentials from environment variable (Railway) or file (local)
             creds_json = os.environ.get("GOOGLE_CREDENTIALS")
             if creds_json:
-                import tempfile
                 creds_dict = json.loads(creds_json)
+                # Railway sometimes double-escapes newlines in private key — fix it
+                if 'private_key' in creds_dict:
+                    creds_dict['private_key'] = creds_dict['private_key'].replace('\\n', '\n')
                 creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
                 print("  Using credentials from environment variable")
             else:
