@@ -505,11 +505,35 @@
   .dealer-picker-dropdown { background: var(--surface2); border-color: var(--border); }
   .dealer-picker-list { background: var(--surface2); }
 
+
+  /* ── Full-page loader ── */
+  #appLoader {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 20px;
+    transition: opacity 0.3s;
+  }
+  #appLoader.hide { opacity: 0; pointer-events: none; }
+  .loader-logo { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+  .loader-logo span { background: #f59e0b; color: #0d0f18; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+  .loader-spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text { font-size: 13px; color: var(--text-muted); }
+
 </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
 <!-- ── HEADER ── -->
+
+<div id="appLoader">
+  <div class="loader-logo">Euler Motors <span>VF</span></div>
+  <div class="loader-spinner"></div>
+  <div class="loader-text" id="loaderText">Loading data from Google Sheets…</div>
+</div>
+
 <div class="header">
   <div class="header-left">
     <span style="font-weight:600;font-size:15px;">Euler Motors</span>
@@ -559,7 +583,26 @@
       <option value="red">🔴 Red</option>
       <option value="none">⚪ Not Set</option>
     </select>
-    <button class="btn btn-secondary btn-sm" onclick="exportData()">⬇ Export</button>
+    <select class="filter-select" id="filterProductHealth" onchange="renderDealers()" style="max-width:200px;">
+      <option value="">Product Health Filter</option>
+      <option value="3wc|green">3WC — 🟢 Green</option>
+      <option value="3wc|amber">3WC — 🟡 Amber</option>
+      <option value="3wc|red">3WC — 🔴 Red</option>
+      <option value="3wc|na">3WC — N/A</option>
+      <option value="3wp|green">3WP — 🟢 Green</option>
+      <option value="3wp|amber">3WP — 🟡 Amber</option>
+      <option value="3wp|red">3WP — 🔴 Red</option>
+      <option value="3wp|na">3WP — N/A</option>
+      <option value="4wc_storm|green">4WCS — 🟢 Green</option>
+      <option value="4wc_storm|amber">4WCS — 🟡 Amber</option>
+      <option value="4wc_storm|red">4WCS — 🔴 Red</option>
+      <option value="4wc_storm|na">4WCS — N/A</option>
+      <option value="4wc_turbo|green">4WCT — 🟢 Green</option>
+      <option value="4wc_turbo|amber">4WCT — 🟡 Amber</option>
+      <option value="4wc_turbo|red">4WCT — 🔴 Red</option>
+      <option value="4wc_turbo|na">4WCT — N/A</option>
+    </select>
+    <button class="btn btn-secondary btn-sm" onclick="exportDealerDashboard()">⬇ Export Excel</button>
     <button class="btn btn-primary btn-sm" onclick="openStatsModal()">📊 Stats</button>
   </div>
   <div class="dealer-grid" id="dealerGrid"></div>
@@ -627,6 +670,7 @@
       <option value="Both">Both</option>
     </select>
     <button class="btn btn-secondary btn-sm" onclick="clearFIFilters()">✕ Clear Filters</button>
+    <button class="btn btn-secondary btn-sm" onclick="exportFIMaster()">⬇ Export Excel</button>
   </div>
 
   <!-- Financier table -->
@@ -645,7 +689,7 @@
 
       <!-- Section: Basic Info -->
       <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;">Basic Info</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
         <div class="form-group" style="margin:0;">
           <label class="form-label">FI Name <span style="color:var(--flag);">*</span></label>
           <input type="text" class="form-select" id="fm_name" placeholder="e.g. Bajaj Finance">
@@ -653,6 +697,15 @@
         <div class="form-group" style="margin:0;">
           <label class="form-label">Category <span style="color:var(--flag);">*</span></label>
           <select class="form-select" id="fm_category"><option value="">— Select —</option></select>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Instruments <span style="color:var(--flag);">*</span></label>
+          <select class="form-select" id="fm_instruments">
+            <option value="">— Select —</option>
+            <option value="OL">OL</option>
+            <option value="TL">TL</option>
+            <option value="Both">Both</option>
+          </select>
         </div>
       </div>
 
@@ -681,8 +734,16 @@
           <select class="form-select" id="fm_status"><option value="">— Select —</option></select>
         </div>
         <div class="form-group" style="margin:0;">
-          <label class="form-label">MoU Status</label>
-          <input type="text" class="form-select" id="fm_mouStatus" placeholder="e.g. Signed, Pending">
+          <label class="form-label">MoU Status <span style="color:var(--flag);">*</span></label>
+          <select class="form-select" id="fm_mouStatus">
+            <option value="">— Select —</option>
+            <option value="Signed">Signed</option>
+            <option value="Pending with FI">Pending with FI</option>
+            <option value="Initial draft to be shared with FI">Initial draft to be shared with FI</option>
+            <option value="Under Review by FI">Under Review by FI</option>
+            <option value="Under Review by Euler">Under Review by Euler</option>
+            <option value="NA">NA</option>
+          </select>
         </div>
         <div class="form-group" style="margin:0;">
           <label class="form-label">MOU Signed Month</label>
@@ -704,17 +765,13 @@
       <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;">Details</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
         <div class="form-group" style="margin:0;">
-          <label class="form-label">Instruments</label>
-          <select class="form-select" id="fm_instruments">
-          <option value="">— Select —</option>
-          <option value="OL">OL</option>
-          <option value="TL">TL</option>
-          <option value="Both">Both</option>
-        </select>
-        </div>
-        <div class="form-group" style="margin:0;">
           <label class="form-label">Priority to Onboard</label>
-          <input type="text" class="form-select" id="fm_priority" placeholder="">
+          <select class="form-select" id="fm_priority">
+            <option value="">— Select —</option>
+            <option value="P0">P0</option>
+            <option value="P1">P1</option>
+            <option value="P2">P2</option>
+          </select>
         </div>
         <div class="form-group" style="margin:0;">
           <label class="form-label">TTL (Time to Live)</label>
@@ -798,6 +855,7 @@
     <select class="filter-select" id="dmFilterStatus" onchange="renderDealerMaster()"><option value="">All Statuses</option></select>
     <select class="filter-select" id="dmFilterType" onchange="renderDealerMaster()"><option value="">DODO / COCO</option></select>
     <button class="btn btn-secondary btn-sm" onclick="clearDealerMasterFilters()">✕ Clear</button>
+    <button class="btn btn-secondary btn-sm" onclick="exportDealerMaster()">⬇ Export Excel</button>
   </div>
   <div id="dealerMasterTable"></div>
 </div>
@@ -890,6 +948,7 @@
     <select class="filter-select" id="fiPolicyFilterCategory" onchange="renderFIPolicy()"><option value="">All Categories</option></select>
     <select class="filter-select" id="fiPolicyFilterStatus" onchange="renderFIPolicy()"><option value="">All Statuses</option></select>
     <button class="btn btn-secondary btn-sm" onclick="clearFIPolicyFilters()">✕ Clear</button>
+    <button class="btn btn-secondary btn-sm" onclick="exportFIPolicy()">⬇ Export Excel</button>
   </div>
 
   <div id="fiPolicyTable"></div>
@@ -963,14 +1022,6 @@
       </div>
     </div>
             <div class="form-group" style="margin:0;">
-      <label class="form-label">Processing Fee <span style="color:var(--flag);">*</span></label>
-      <div id="fip_ind_processingFee_view" class="fip-view-field">—</div>
-      <div id="fip_ind_processingFee_edit_wrap" style="display:none;position:relative;">
-        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">₹</span>
-        <input type="number" class="form-select" id="fip_ind_processingFee" placeholder="0" style="padding-left:22px;" min="0">
-      </div>
-    </div>
-            <div class="form-group" style="margin:0;">
       <label class="form-label">Residence Address Criteria <span style="color:var(--flag);">*</span></label>
       <div id="fip_ind_residence_view" class="fip-view-field">—</div>
       <select class="form-select" id="fip_ind_residence" style="display:none;"><option value="">— Select —</option><option value="Rented" >Rented</option><option value="Own" >Own</option><option value="Either Scenario" >Either Scenario</option></select>
@@ -997,6 +1048,26 @@
         <div id="fip_ind_ntc_label" style="font-size:12px;font-weight:600;color:var(--cat-d);">No</div>
         <div id="fip_ind_ntc_track" onclick="toggleFIPYN('fip_ind_ntc')" style="width:36px;height:20px;border-radius:10px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
           <div id="fip_ind_ntc_thumb" style="width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+        </div>
+      </div>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Provides Loan to FTU <span style="color:var(--flag);">*</span></label>
+      <div id="fip_ind_ftu_view" class="fip-view-field" style="display:none;">No</div>
+      <div id="fip_ind_ftu_wrap" style="display:flex;align-items:center;gap:10px;padding:6px 0;">
+        <div id="fip_ind_ftu_label" style="font-size:12px;font-weight:600;color:var(--cat-d);">No</div>
+        <div id="fip_ind_ftu_track" onclick="toggleFIPYN('fip_ind_ftu')" style="width:36px;height:20px;border-radius:10px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
+          <div id="fip_ind_ftu_thumb" style="width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+        </div>
+      </div>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Provides Loan to FTB <span style="color:var(--flag);">*</span></label>
+      <div id="fip_ind_ftb_view" class="fip-view-field" style="display:none;">No</div>
+      <div id="fip_ind_ftb_wrap" style="display:flex;align-items:center;gap:10px;padding:6px 0;">
+        <div id="fip_ind_ftb_label" style="font-size:12px;font-weight:600;color:var(--cat-d);">No</div>
+        <div id="fip_ind_ftb_track" onclick="toggleFIPYN('fip_ind_ftb')" style="width:36px;height:20px;border-radius:10px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
+          <div id="fip_ind_ftb_thumb" style="width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
         </div>
       </div>
     </div>
@@ -1342,13 +1413,13 @@ const FINANCIERS_RAW = []; // loaded from server
 
 const FINANCIERS_META = []; // loaded from server
 const FI_CATEGORIES = [
-  "NBFC", "PSU Bank", "Pvt Bank", "Fintech", "SFB",
-  "New Age Fintech", "Leasing", "Cooperative Bank",
-  "Gramin Bank", "Regional Bank"
+  "PAN India NBFC", "Regional NBFC", "PSU Bank", "Pvt Bank",
+  "Fintech/Green NBFC", "SFB", "Leasing",
+  "Cooperative/Gramin/Regional Bank"
 ];
 const FI_STATUSES = [
   "Active", "Onboarded", "Discussion - Active",
-  "Discussion - Inactive", "Not Started", "On Hold"
+  "Discussion - Initial", "Not Started", "On Hold"
 ];
 
 const DEALERS_MASTER_RAW = []; // loaded from server
@@ -1372,8 +1443,13 @@ let productFilter = '';
 
 // ── API HELPERS ───────────────────────────────────────────────
 const API = {
-  get:    (path) => fetch(path).then(r => r.json()),
-  post:   (path, data) => fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) }).then(r => r.json()),
+  get: async (path) => {
+    const r = await fetch(path);
+    const text = await r.text();
+    try { return JSON.parse(text); }
+    catch(e) { console.error('Non-JSON response from', path, ':', text.slice(0,100)); return []; }
+  },
+  post: (path, data) => fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) }).then(r => r.json()),
   delete: (path) => fetch(path, { method:'DELETE' }).then(r => r.json())
 };
 
@@ -1388,6 +1464,9 @@ function setSaveStatus(status) {
 
 // ── LOAD STATE FROM GOOGLE SHEETS ─────────────────────────────
 async function loadState() {
+  const loader = document.getElementById('appLoader');
+  const loaderText = document.getElementById('loaderText');
+  if (loader) loader.style.display = 'flex';
   setSaveStatus('saving');
   try {
     const [fiMaster, dealerMaster, addedDealers, onboarding, fiPolicy, dealerHealth] = await Promise.all([
@@ -1399,23 +1478,51 @@ async function loadState() {
       API.get('/api/dealer_health')
     ]);
 
+    // Ensure all responses are arrays
+    const toArr = v => Array.isArray(v) ? v : [];
+    const fiM   = toArr(fiMaster);
+    const dmM   = toArr(dealerMaster);
+    const adM   = toArr(addedDealers);
+    const onbM  = toArr(onboarding);
+    const fipM  = toArr(fiPolicy);
+    const dhM   = toArr(dealerHealth);
+
     // FI Master
-    state.financiers = fiMaster.map(f => f.name).filter(Boolean);
-    state.financiersMeta = fiMaster;
+    state.financiers = fiM.map(f => f.name).filter(Boolean);
+    // Migrate legacy categories and statuses on load
+    const CAT_MIGRATE = {
+      "NBFC": "PAN India NBFC",
+      "New Age Fintech": "Fintech/Green NBFC",
+      "Fintech": "Fintech/Green NBFC",
+      "Cooperative Bank": "Cooperative/Gramin/Regional Bank",
+      "Cooperative Banks": "Cooperative/Gramin/Regional Bank",
+      "Gramin Bank": "Cooperative/Gramin/Regional Bank",
+      "Gramin Banks": "Cooperative/Gramin/Regional Bank",
+      "Regional Bank": "Cooperative/Gramin/Regional Bank",
+      "Regional Banks": "Cooperative/Gramin/Regional Bank"
+    };
+    const STATUS_MIGRATE = { "Discussion - Inactive": "Discussion - Initial" };
+    fiM.forEach(function(m) {
+      var cat = (m.category||"").trim();
+      if (CAT_MIGRATE[cat])  m.category = CAT_MIGRATE[cat];
+      var sts = (m.status||"").trim();
+      if (STATUS_MIGRATE[sts]) m.status = STATUS_MIGRATE[sts];
+    });
+    state.financiersMeta = fiM;
 
     // Dealer Master
-    state.dealersMaster = dealerMaster;
+    state.dealersMaster = dmM;
     // Also populate DEALERS_RAW equivalent for picker
-    state.dealers = dealerMaster.map(d => ({ dealer: d.dealerName, location: d.location, rm: d.rmSales||'' }));
+    state.dealers = dmM.map(d => ({ dealer: d.dealerName, location: d.location, rm: d.rmSales||'' }));
 
     // Added Dealers
-    state.addedDealers = addedDealers.map(d => ({
+    state.addedDealers = adM.map(d => ({
       dealer: d.dealer, location: d.location, rm: d.rm||'', vfPoc: d.vfPoc||''
     }));
 
     // FI Onboarding → rebuild mapping object
     state.mapping = {};
-    onboarding.forEach(row => {
+    onbM.forEach(row => {
       if (!row.dealer || !row.financier) return;
       if (!state.mapping[row.dealer]) state.mapping[row.dealer] = {};
       state.mapping[row.dealer][row.financier] = {
@@ -1430,18 +1537,18 @@ async function loadState() {
 
     // FI Policy
     state.fiPolicy = {};
-    fiPolicy.forEach(row => {
+    fipM.forEach(row => {
       if (!row.financier || !row.productKey) return;
       if (!state.fiPolicy[row.financier]) state.fiPolicy[row.financier] = {};
       const pol = { ind_applicable: row.ind_applicable === 'true', co_applicable: row.co_applicable === 'true', ind: {}, co: {} };
-      ['minCibil','maxTenure','maxLoan','minIrr','processingFee','residence','guarantor','bankStatement','licenseType','ntc','remarks'].forEach(k => { pol.ind[k] = row['ind_'+k]||''; });
+      ['minCibil','maxTenure','maxLoan','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','remarks'].forEach(k => { pol.ind[k] = row['ind_'+k]||''; });
       ['minCibil','maxTenure','maxLoan','minIrr','companyProperty','personalResidence','guarantor','annualTurnover','vintage','existingFleet','fleetSize','ntc','remarks'].forEach(k => { pol.co[k] = row['co_'+k]||''; });
       state.fiPolicy[row.financier][row.productKey] = pol;
     });
 
     // Dealer Health
     state.dealerHealth = {};
-    dealerHealth.forEach(row => {
+    dhM.forEach(row => {
       if (!row.dealer) return;
       state.dealerHealth[row.dealer] = {
         '3wc': row['3wc']||'', '3wp': row['3wp']||'',
@@ -1450,9 +1557,13 @@ async function loadState() {
     });
 
     setSaveStatus('saved');
+    if (loader) { loader.classList.add('hide'); setTimeout(() => { loader.style.display = 'none'; }, 350); }
   } catch(e) {
     setSaveStatus('error');
     console.error('Load error:', e);
+    if (loaderText) loaderText.textContent = '⚠ Could not connect to server. Is server.py running?';
+    if (loader) loader.style.background = 'var(--bg)';
+    setTimeout(() => { if (loader) { loader.classList.add('hide'); setTimeout(() => { loader.style.display = 'none'; }, 350); } }, 2500);
     toast("⚠ Could not connect to server. Is server.py running?");
   }
 }
@@ -1495,7 +1606,7 @@ async function saveFIPolicyToSheet(fiName, productKey) {
   const pol = (state.fiPolicy[fiName]||{})[productKey]||{};
   const row = { financier: fiName, productKey,
     ind_applicable: String(!!pol.ind_applicable), co_applicable: String(!!pol.co_applicable) };
-  ['minCibil','maxTenure','maxLoan','minIrr','processingFee','residence','guarantor','bankStatement','licenseType','ntc','remarks'].forEach(k => { row['ind_'+k] = (pol.ind||{})[k]||''; });
+  ['minCibil','maxTenure','maxLoan','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','remarks'].forEach(k => { row['ind_'+k] = (pol.ind||{})[k]||''; });
   ['minCibil','maxTenure','maxLoan','minIrr','companyProperty','personalResidence','guarantor','annualTurnover','vintage','existingFleet','fleetSize','ntc','remarks'].forEach(k => { row['co_'+k] = (pol.co||{})[k]||''; });
   setSaveStatus('saving');
   try { await API.post('/api/fi_policy', row); setSaveStatus('saved'); } catch(e) { setSaveStatus('error'); }
@@ -1703,9 +1814,10 @@ function renderFilters() {
 }
 
 function renderDealers() {
-  const search  = document.getElementById("searchBox").value.toLowerCase();
-  const finF    = document.getElementById("filterFinancier").value;
-  const healthF = document.getElementById("filterHealth").value;
+  const search         = document.getElementById("searchBox").value.toLowerCase();
+  const finF           = document.getElementById("filterFinancier").value;
+  const healthF        = document.getElementById("filterHealth").value;
+  const productHealthF = document.getElementById("filterProductHealth").value;
   document.getElementById("addedCount").textContent = "("+state.addedDealers.length+"/"+getDealerMasterList().length+")";
   const grid = document.getElementById("dealerGrid");
   if (state.addedDealers.length === 0) {
@@ -1719,6 +1831,11 @@ function renderDealers() {
       const oh = computeOverallHealth(d.dealer);
       if (healthF === 'none' && oh !== null) return false;
       if (healthF !== 'none' && oh !== healthF) return false;
+    }
+    if (productHealthF) {
+      const [prodKey, prodHealth] = productHealthF.split('|');
+      const h = (state.dealerHealth[d.dealer] || {})[prodKey] || 'na';
+      if (h !== prodHealth) return false;
     }
     return true;
   });
@@ -2219,13 +2336,14 @@ function renderFinancierMaster() {
       '<td style="text-align:center;font-size:12px;color:var(--text-muted);">' + (idx+1) + '</td>' +
       '<td style="font-weight:600;font-size:13px;white-space:nowrap;">' + escHtml(name) + '</td>' +
       '<td><span class="badge badge-count">' + escHtml(m.category || "—") + '</span></td>' +
+      cell(m.instruments) +
       '<td style="text-align:center;">' + yN(m["3wc"]) + '</td>' +
       '<td style="text-align:center;">' + yN(m["3wp"]) + '</td>' +
       '<td style="text-align:center;">' + yN(m["4wc"]) + '</td>' +
       '<td style="text-align:center;">' + yN(m["4wct"]) + '</td>' +
       '<td>' + stBadge(m.status) + '</td>' +
       cell(m.mouStatus) + cell(m.mouSignedMonth) + cell(m.onboardingDate) +
-      cell(m.instruments) + cell(m.priority) + cell(m.ttl) + cell(m.helpRequired) +
+      cell(m.priority) + cell(m.ttl) + cell(m.helpRequired) +
       cell(m.sourcedBy) + cell(m.spoc) + cell(m.secondaryPoc) + cell(m.contactDetails) +
       '<td style="font-size:12px;color:var(--text-muted);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + commentSafe + '">' + (commentSafe || "—") + '</td>' +
       '<td style="text-align:center;"><span class="badge badge-count">' + dc + '</span></td>' +
@@ -2239,10 +2357,10 @@ function renderFinancierMaster() {
     '<div style="overflow-x:auto;">' +
     '<table class="dealer-table" style="min-width:1700px;">' +
     '<thead><tr>' +
-    '<th style="width:50px;text-align:center;">S.No</th><th style="min-width:160px;">FI Name</th><th>Category</th>' +
+    '<th style="width:50px;text-align:center;">S.No</th><th style="min-width:160px;">FI Name</th><th>Category</th><th>Instruments</th>' +
     '<th style="text-align:center;">3WC</th><th style="text-align:center;">3WP</th><th style="text-align:center;">4WCS</th><th style="text-align:center;">4WCT</th>' +
     '<th style="min-width:130px;">Status</th><th>MoU Status</th><th>MOU Signed Month</th><th>FI Onboarding Month</th>' +
-    '<th>Instruments</th><th>Priority</th><th>TTL</th><th>Help Required</th>' +
+    '<th>Priority</th><th>TTL</th><th>Help Required</th>' +
     '<th>Sourced By</th><th>SPOC</th><th>Secondary POC</th><th>Contact</th><th>Comments</th>' +
     '<th>Dealer Links</th><th style="width:130px;">Actions</th>' +
     '</tr></thead><tbody>' + rows + '</tbody></table></div>';
@@ -2253,11 +2371,11 @@ function renderFinancierMaster() {
 let editingFinancierName = null;
 
 const FM_FIELDS = [
-  { id:'fm_name', key:'name' }, { id:'fm_category', key:'category' },
+  { id:'fm_name', key:'name' }, { id:'fm_category', key:'category' }, { id:'fm_instruments', key:'instruments' },
   { id:'fm_3wc', key:'3wc', type:'check' }, { id:'fm_3wp', key:'3wp', type:'check' }, { id:'fm_4wc', key:'4wc', type:'check' }, { id:'fm_4wct', key:'4wct', type:'check' },
   { id:'fm_status', key:'status' }, { id:'fm_mouStatus', key:'mouStatus' },
   { id:'fm_mouSignedMonth', key:'mouSignedMonth', type:'monthyear' }, { id:'fm_onboardingDate', key:'onboardingDate', type:'monthyear' },
-  { id:'fm_instruments', key:'instruments' }, { id:'fm_priority', key:'priority' },
+  { id:'fm_priority', key:'priority' },
   { id:'fm_ttl', key:'ttl' }, { id:'fm_helpRequired', key:'helpRequired' },
   { id:'fm_sourcedBy', key:'sourcedBy' }, { id:'fm_contactDetails', key:'contactDetails' },
   { id:'fm_spoc', key:'spoc' }, { id:'fm_secondaryPoc', key:'secondaryPoc' },
@@ -2334,12 +2452,23 @@ function closeFinancierMasterModal() {
 
 function saveFinancierMaster() {
   const name = document.getElementById("fm_name").value.trim();
-  const category = document.getElementById("fm_category").value.trim();
-  const status = document.getElementById("fm_status").value.trim();
+  const category    = document.getElementById("fm_category").value.trim();
+  const status      = document.getElementById("fm_status").value.trim();
+  const mouStatus   = document.getElementById("fm_mouStatus").value.trim();
+  const instruments = document.getElementById("fm_instruments").value.trim();
 
-  if (!name) { toast("⚠ Financier name is required."); document.getElementById("fm_name").focus(); return; }
-  if (!category) { toast("⚠ Category is required."); document.getElementById("fm_category").focus(); return; }
-  if (!status) { toast("⚠ Status is required."); document.getElementById("fm_status").focus(); return; }
+  if (!name)        { toast("⚠ Financier name is required.");  document.getElementById("fm_name").focus();        return; }
+  if (!category)    { toast("⚠ Category is required.");        document.getElementById("fm_category").focus();    return; }
+  // Check at least one product selected
+  const anyProduct = document.getElementById("fm_3wc").checked ||
+    document.getElementById("fm_3wp").checked ||
+    document.getElementById("fm_4wc").checked ||
+    document.getElementById("fm_4wct").checked;
+  if (!anyProduct) { toast("⚠ Please select at least one product."); return; }
+
+  if (!instruments) { toast("⚠ Instruments is required.");     document.getElementById("fm_instruments").focus(); return; }
+  if (!status)      { toast("⚠ Status is required.");          document.getElementById("fm_status").focus();      return; }
+  if (!mouStatus)   { toast("⚠ MoU Status is required.");      document.getElementById("fm_mouStatus").focus();   return; }
 
   // Collect all fields
   const record = {};
@@ -2632,22 +2761,22 @@ const FIP_SEGMENTS = ['ind', 'co'];
 
 // Field keys for each segment — used for save/load/clear
 const FIP_SEG_FIELDS = {
-  ind: ['minCibil','maxTenure','maxLoan','minIrr','processingFee','residence','guarantor','bankStatement','licenseType','ntc','remarks'],
+  ind: ['minCibil','maxTenure','maxLoan','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','remarks'],
   co:  ['minCibil','maxTenure','maxLoan','minIrr','companyProperty','personalResidence','guarantor','annualTurnover','vintage','existingFleet','fleetSize','ntc','remarks']
 };
 
 // Fields that are toggle yes/no (stored as 'Yes'/'No')
-const FIP_TOGGLE_FIELDS = { ind: ['ntc'], co: ['existingFleet','ntc'] };
+const FIP_TOGGLE_FIELDS = { ind: ['ntc','ftu','ftb'], co: ['existingFleet','ntc'] };
 
 // INR display fields
-const FIP_INR_FIELDS = { ind: ['maxLoan','processingFee'], co: ['maxLoan','annualTurnover'] };
+const FIP_INR_FIELDS = { ind: ['maxLoan'], co: ['maxLoan','annualTurnover'] };
 
 // PCT display fields
 const FIP_PCT_FIELDS = { ind: ['minIrr'], co: ['minIrr'] };
 
 // Mandatory fields per segment (all except remarks)
 const FIP_MANDATORY = {
-  ind: ['minCibil','maxTenure','maxLoan','minIrr','processingFee','residence','guarantor','bankStatement','licenseType','ntc'],
+  ind: ['minCibil','maxTenure','maxLoan','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb'],
   co:  ['minCibil','maxTenure','maxLoan','minIrr','companyProperty','personalResidence','guarantor','annualTurnover','vintage','existingFleet','ntc']
 };
 // conditionally mandatory: fleetSize is mandatory only when existingFleet = Yes
@@ -2698,14 +2827,27 @@ function renderFIPolicy() {
     return;
   }
 
+  // Map product keys to FI Master column names
+  var PROD_META_KEY = { '3wc': '3wc', '3wp': '3wp', '4wc_storm': '4wc', '4wc_turbo': '4wct' };
+  function fiOffersProduct(meta, productKey) {
+    var mk = PROD_META_KEY[productKey];
+    if (!mk) return false;
+    var v = String(meta[mk]||"").trim();
+    return v === 'Y' || v === 'y' || v === 'true' || v === 'TRUE' ||
+           v === 'Yes' || v === '✓' || v === '1' || v === 1 || v === true;
+  }
+
   var rows = filtered.map(function(f, idx){
     var productBtns = PRODUCTS.map(function(p){
+      // Only show products the FI offers per FI Master List
+      if (!fiOffersProduct(f.meta, p.key)) return '';
       var pol = getFIPolicy(f.name, p.key);
       var applicable = pol && (pol.ind_applicable || pol.co_applicable);
       var cls  = applicable ? "defined" : "na";
       var icon = applicable ? "✓" : "✕";
       return '<button class="fip-product-btn '+cls+'" onclick="openFIPolicyModal(\''+escJs(f.name)+'\',\''+p.key+'\',\''+escJs(p.label)+'\')">'+ icon +' '+ p.label +'</button>';
     }).join("");
+    if (!productBtns.trim()) productBtns = '<span style="font-size:11px;color:var(--text-hint);">No products in FI Master</span>';
     return '<tr>'+
       '<td style="text-align:center;font-size:12px;color:var(--text-muted);">'+(idx+1)+'</td>'+
       '<td style="font-weight:600;font-size:13px;white-space:nowrap;">'+escHtml(f.name)+'</td>'+
@@ -2994,7 +3136,7 @@ function fipSegmentMandatoryCheck(seg) {
 
 const FIP_FIELD_LABELS = {
   minCibil: 'Minimum CIBIL', maxTenure: 'Max Loan Tenure', maxLoan: 'Max Loan Amount',
-  minIrr: 'Minimum IRR', processingFee: 'Processing Fee', residence: 'Residence Criteria',
+  minIrr: 'Minimum IRR', residence: 'Residence Criteria',
   guarantor: 'Guarantor Required', bankStatement: 'L6M Bank Statement',
   licenseType: 'License Type', ntc: 'NTC Loan',
   companyProperty: 'Company Property', personalResidence: 'Personal Residence',
@@ -3352,6 +3494,107 @@ function runMatcher() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// EXPORT TO EXCEL (SheetJS)
+// ══════════════════════════════════════════════════════════════
+
+function xlsxDownload(rows, sheetName, fileName) {
+  if (!rows || !rows.length) { toast("No data to export."); return; }
+  try {
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    // Auto-width columns
+    const colWidths = rows[0].map((_, ci) =>
+      ({ wch: Math.max(...rows.map(r => String(r[ci]||"").length), 10) })
+    );
+    ws['!cols'] = colWidths;
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    XLSX.writeFile(wb, fileName);
+    toast("✅ Exported: " + fileName);
+  } catch(e) {
+    toast("⚠ Export failed: " + e.message);
+  }
+}
+
+function exportDealerDashboard() {
+  const headers = ["Dealer", "Location", "VF POC", "Financiers", "Overall Health",
+    "3WC Health", "3WP Health", "4WCS Health", "4WCT Health"];
+  const rows = [headers, ...state.addedDealers.map(d => {
+    const fins = Object.keys(getDealerFinanciers(d.dealer));
+    const h = state.dealerHealth[d.dealer] || {};
+    return [
+      d.dealer, d.location||"", d.vfPoc||"",
+      fins.join(", "),
+      computeOverallHealth(d.dealer)||"Not Set",
+      h['3wc']||"na", h['3wp']||"na", h['4wc_storm']||"na", h['4wc_turbo']||"na"
+    ];
+  })];
+  xlsxDownload(rows, "Dealer Dashboard", "Euler_Dealer_Dashboard.xlsx");
+}
+
+function exportFIMaster() {
+  const headers = ["FI Name","Category","Instruments","3WC","3WP","4WCS","4WCT",
+    "Status","MoU Status","MOU Signed Month","FI Onboarding Month",
+    "Priority","TTL","Help Required","Sourced By","SPOC","Secondary POC","Contact","Comments"];
+  const rows = [headers, ...state.financiers.map(name => {
+    const m = state.financiersMeta.find(x => x.name === name) || {};
+    return [name, m.category||"", m.instruments||"",
+      m["3wc"]||"", m["3wp"]||"", m["4wc"]||"", m["4wct"]||"",
+      m.status||"", m.mouStatus||"", m.mouSignedMonth||"", m.onboardingDate||"",
+      m.priority||"", m.ttl||"", m.helpRequired||"",
+      m.sourcedBy||"", m.spoc||"", m.secondaryPoc||"", m.contactDetails||"", m.comments||""
+    ];
+  })];
+  xlsxDownload(rows, "FI Master", "Euler_FI_Master.xlsx");
+}
+
+function exportDealerMaster() {
+  const headers = ["Zone","State","Location","Dealer Name","Dealer Principle",
+    "Email","Phone","Type","Status","VF POC","VF POC Email","VF POC Mobile",
+    "ZM Sales","ZM Email","ZM Mobile","RM Sales","RM Email","RM Mobile",
+    "ASM Sales","ASM Email","ASM Mobile"];
+  const list = getDealerMasterList();
+  const rows = [headers, ...list.map(d => [
+    d.zone||"", d.state||"", d.location||"", d.dealerName||"", d.dealerPrinciple||"",
+    d.dealerEmail||"", d.dealerPhone||"", d.dodoCocoType||"", d.dealerStatus||"",
+    d.vfPoc||"", d.vfPocEmail||"", d.vfPocMobile||"",
+    d.zmSales||"", d.zmEmail||"", d.zmMobile||"",
+    d.rmSales||"", d.rmEmail||"", d.rmMobile||"",
+    d.asmSales||"", d.asmEmail||"", d.asmMobile||""
+  ])];
+  xlsxDownload(rows, "Dealer Master", "Euler_Dealer_Master.xlsx");
+}
+
+function exportFIPolicy() {
+  const headers = ["Financier","Product",
+    "Ind Applicable","Ind Min CIBIL","Ind Max Tenure","Ind Max Loan","Ind Min IRR",
+    "Ind Residence","Ind Guarantor","Ind Bank Statement",
+    "Ind License Type","Ind NTC","Ind FTU","Ind FTB","Ind Remarks",
+    "CO Applicable","CO Min CIBIL","CO Max Tenure","CO Max Loan","CO Min IRR",
+    "CO Company Property","CO Personal Residence","CO Guarantor",
+    "CO Annual Turnover","CO Vintage","CO Existing Fleet","CO Fleet Size","CO NTC","CO Remarks"];
+  const rows = [headers];
+  state.financiers.forEach(fi => {
+    PRODUCTS.forEach(p => {
+      const pol = (state.fiPolicy[fi]||{})[p.key];
+      if (!pol) return;
+      const i = pol.ind||{}, c = pol.co||{};
+      rows.push([fi, p.label,
+        pol.ind_applicable?"Yes":"No",
+        i.minCibil||"", i.maxTenure||"", i.maxLoan||"", i.minIrr||"",
+        i.residence||"", i.guarantor||"",
+        i.bankStatement||"", i.licenseType||"", i.ntc||"", i.ftu||"", i.ftb||"", i.remarks||"",
+        pol.co_applicable?"Yes":"No",
+        c.minCibil||"", c.maxTenure||"", c.maxLoan||"", c.minIrr||"",
+        c.companyProperty||"", c.personalResidence||"", c.guarantor||"",
+        c.annualTurnover||"", c.vintage||"", c.existingFleet||"",
+        c.fleetSize||"", c.ntc||"", c.remarks||""
+      ]);
+    });
+  });
+  xlsxDownload(rows, "FI Policy", "Euler_FI_Policy.xlsx");
+}
+
+// ══════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════
 function renderAll() { renderStats(); renderFilters(); renderDealers(); }
@@ -3371,8 +3614,7 @@ document.addEventListener("click", e => {
   if (wrap && !wrap.contains(e.target)) document.getElementById("dealerPickerDropdown").classList.remove("open");
 });
 
-loadState();
-renderAll();
+(async () => { await loadState(); renderAll(); })();
 </script>
 </body>
 </html>
