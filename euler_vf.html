@@ -2533,7 +2533,7 @@ const DM_FIELDS = [
 let editingDealerIdx = null;
 
 function getDealerMasterList() {
-  return state.dealersMaster && state.dealersMaster.length ? state.dealersMaster : DEALERS_MASTER_RAW;
+  return (state.dealersMaster && state.dealersMaster.length) ? state.dealersMaster : [];
 }
 
 function clearDealerMasterFilters() {
@@ -2703,7 +2703,7 @@ function saveDealerMaster() {
     record[key] = el ? el.value.trim() : "";
   });
 
-  if (!state.dealersMaster) state.dealersMaster = DEALERS_MASTER_RAW.slice();
+  if (!state.dealersMaster) state.dealersMaster = [];
 
   if (editingDealerIdx !== null) {
     state.dealersMaster[editingDealerIdx] = record;
@@ -2724,7 +2724,7 @@ function confirmRemoveDealerMaster(idx) {
   if (!d) return;
   document.getElementById("confirmDealerMasterName").textContent = d.dealerName + (d.location ? " (" + d.location + ")" : "");
   document.getElementById("confirmDealerMasterBtn").onclick = function() {
-    if (!state.dealersMaster) state.dealersMaster = DEALERS_MASTER_RAW.slice();
+    if (!state.dealersMaster) state.dealersMaster = [];
     state.dealersMaster.splice(idx, 1);
     closeConfirmDealerMasterModal();
     deleteDealerMasterFromSheet(d.dealerName, d.location);
