@@ -190,7 +190,6 @@
   .sum-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
   .sum-value { font-size: 26px; font-weight: 600; line-height: 1; }
   .sum-sub { font-size: 11px; color: var(--text-hint); margin-top: 4px; }
-  .sum-flag { color: var(--flag); }
   .sum-ok { color: var(--ok); }
   .view-toggle { display: flex; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px; width: fit-content; box-shadow: var(--shadow); }
   .toggle-btn { padding: 7px 20px; border-radius: 5px; border: none; font-size: 13px; font-family: inherit; font-weight: 500; cursor: pointer; background: none; color: var(--text-muted); transition: all 0.15s; }
@@ -428,8 +427,9 @@
   .fip-product-btn { display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:11px;font-weight:600;font-family:'DM Mono',monospace;cursor:pointer;transition:all 0.12s; }
   .fip-product-btn:hover { box-shadow:var(--shadow); }
   .fip-product-btn.defined { border-color:var(--cat-b-border);background:var(--cat-b-bg);color:var(--cat-b); }
+  .fip-product-btn.partial { border-color:#d97706;background:#1c1200;color:#fbbf24; }
   .fip-product-btn.na { border-color:var(--border);background:var(--surface2);color:var(--text-hint); }
-  .fip-product-btn.undefined { border-color:var(--border);background:var(--surface);color:var(--text-muted); }
+  .fip-product-btn
 
   /* Health status */
   .health-dot { width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0; }
@@ -993,7 +993,7 @@
           <div id="fip_ind_hint" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px dashed var(--border);border-radius:8px;margin-bottom:14px;font-size:12px;color:var(--text-muted);">
             ↑ Enable the toggle above to define policy for Individual customers
           </div>
-          
+
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
             <div class="form-group" style="margin:0;">
       <label class="form-label">Minimum CIBIL <span style="color:var(--flag);">*</span></label>
@@ -1099,7 +1099,7 @@
           <div id="fip_co_hint" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px dashed var(--border);border-radius:8px;margin-bottom:14px;font-size:12px;color:var(--text-muted);">
             ↑ Enable the toggle above to define policy for Company Owned customers
           </div>
-          
+
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
             <div class="form-group" style="margin:0;">
       <label class="form-label">Minimum CIBIL <span style="color:var(--flag);">*</span></label>
@@ -1127,52 +1127,38 @@
         <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">%</span>
       </div>
     </div>
+
             <div class="form-group" style="margin:0;">
-      <label class="form-label">Company Property <span style="color:var(--flag);">*</span></label>
-      <div id="fip_co_companyProperty_view" class="fip-view-field">—</div>
-      <select class="form-select" id="fip_co_companyProperty" style="display:none;"><option value="">— Select —</option><option value="Rented" >Rented</option><option value="Own" >Own</option><option value="Either Scenario" >Either Scenario</option></select>
-    </div>
-            <div class="form-group" style="margin:0;">
-      <label class="form-label">Personal Residence <span style="color:var(--flag);">*</span></label>
-      <div id="fip_co_personalResidence_view" class="fip-view-field">—</div>
-      <select class="form-select" id="fip_co_personalResidence" style="display:none;"><option value="">— Select —</option><option value="Rented" >Rented</option><option value="Own" >Own</option><option value="Either Scenario" >Either Scenario</option></select>
-    </div>
-            <div class="form-group" style="margin:0;">
-      <label class="form-label">Guarantor Required <span style="color:var(--flag);">*</span></label>
-      <div id="fip_co_guarantor_view" class="fip-view-field">—</div>
-      <select class="form-select" id="fip_co_guarantor" style="display:none;"><option value="">— Select —</option><option value="Yes" >Yes</option><option value="No" >No</option><option value="Either Scenario" >Either Scenario</option></select>
-    </div>
-            <div class="form-group" style="margin:0;">
-      <label class="form-label">Annual Turnover <span style="color:var(--flag);">*</span> <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-hint);font-size:10px;">(Avg of L2 years)</span></label>
-      <div id="fip_co_annualTurnover_view" class="fip-view-field">—</div>
-      <div id="fip_co_annualTurnover_edit_wrap" style="display:none;position:relative;">
-        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">₹</span>
-        <input type="number" class="form-select" id="fip_co_annualTurnover" placeholder="0" style="padding-left:22px;" min="0">
-      </div>
-    </div>
-            <div class="form-group" style="margin:0;">
-      <label class="form-label">Vintage (years)</label>
+      <label class="form-label">Vintage (years) <span style="color:var(--flag);">*</span></label>
       <div id="fip_co_vintage_view" class="fip-view-field">—</div>
       <input type="number" class="form-select" id="fip_co_vintage" placeholder="e.g. 2" style="display:none;" min="0">
     </div>
-            <div class="form-group" style="margin:0;">
-      <label class="form-label">Existing Fleet <span style="color:var(--flag);">*</span></label>
-      <div id="fip_co_existingFleet_view" class="fip-view-field" style="display:none;">No</div>
-      <div id="fip_co_existingFleet_wrap" style="display:flex;align-items:center;gap:10px;padding:6px 0;">
-        <div id="fip_co_existingFleet_label" style="font-size:12px;font-weight:600;color:var(--cat-d);">No</div>
-        <div id="fip_co_existingFleet_track" onclick="toggleFIPYN('fip_co_existingFleet')" style="width:36px;height:20px;border-radius:10px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
-          <div id="fip_co_existingFleet_thumb" style="width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
-        </div>
-      </div>
-    </div>
           </div>
-          <!-- Existing Fleet Size (conditional) -->
-          <div id="fip_co_fleetSizeRow" style="display:none;margin-bottom:12px;">
-            <div class="form-group" style="margin:0;">
-      <label class="form-label">Existing Fleet Size <span style="color:var(--flag);">*</span></label>
-      <div id="fip_co_fleetSize_view" class="fip-view-field">—</div>
-      <input type="number" class="form-select" id="fip_co_fleetSize" placeholder="e.g. 5" style="display:none;" min="0">
-    </div>
+
+          <!-- Tiered Criteria: Turnover + Fleet -->
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <label class="form-label" style="margin:0;">Turnover & Fleet Criteria <span style="color:var(--flag);">*</span>
+                <span style="font-weight:400;font-size:10px;color:var(--text-hint);margin-left:4px;">(Avg L2 years · NA = no requirement)</span>
+              </label>
+              <button class="btn btn-secondary btn-sm" id="fip_co_addTierBtn" onclick="addFIPTier()" style="display:none;font-size:11px;">+ Add Tier</button>
+            </div>
+            <!-- View mode: tier table -->
+            <div id="fip_co_tiersView" class="fip-view-field" style="min-height:40px;padding:6px 10px;">—</div>
+            <!-- Edit mode: tier editor -->
+            <div id="fip_co_tiersEdit" style="display:none;">
+              <table style="width:100%;border-collapse:collapse;font-size:12px;" id="fip_co_tierTable">
+                <thead>
+                  <tr style="background:var(--surface3);">
+                    <th style="padding:6px 8px;text-align:left;border:1px solid var(--border);color:var(--text-muted);">Min Turnover (₹)</th>
+                    <th style="padding:6px 8px;text-align:left;border:1px solid var(--border);color:var(--text-muted);">Max Turnover (₹)</th>
+                    <th style="padding:6px 8px;text-align:left;border:1px solid var(--border);color:var(--text-muted);">Min Fleet Size</th>
+                    <th style="width:32px;border:1px solid var(--border);"></th>
+                  </tr>
+                </thead>
+                <tbody id="fip_co_tierBody"></tbody>
+              </table>
+            </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
             <div class="form-group" style="margin:0;">
@@ -1182,6 +1168,16 @@
         <div id="fip_co_ntc_label" style="font-size:12px;font-weight:600;color:var(--cat-d);">No</div>
         <div id="fip_co_ntc_track" onclick="toggleFIPYN('fip_co_ntc')" style="width:36px;height:20px;border-radius:10px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
           <div id="fip_co_ntc_thumb" style="width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+        </div>
+      </div>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">ITR Filed <span style="color:var(--flag);">*</span></label>
+      <div id="fip_co_itr_view" class="fip-view-field" style="display:none;">No</div>
+      <div id="fip_co_itr_wrap" style="display:flex;align-items:center;gap:10px;padding:6px 0;">
+        <div id="fip_co_itr_label" style="font-size:12px;font-weight:600;color:var(--cat-d);">No</div>
+        <div id="fip_co_itr_track" onclick="toggleFIPYN('fip_co_itr')" style="width:36px;height:20px;border-radius:10px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
+          <div id="fip_co_itr_thumb" style="width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
         </div>
       </div>
     </div>
@@ -1408,10 +1404,7 @@
 // ══════════════════════════════════════════════════════════════
 // SHARED DATA & STATE
 // ══════════════════════════════════════════════════════════════
-const DEALERS_RAW = []; // loaded from server
-const FINANCIERS_RAW = []; // loaded from server
 
-const FINANCIERS_META = []; // loaded from server
 const FI_CATEGORIES = [
   "PAN India NBFC", "Regional NBFC", "PSU Bank", "Pvt Bank",
   "Fintech/Green NBFC", "SFB", "Leasing",
@@ -1422,7 +1415,6 @@ const FI_STATUSES = [
   "Discussion - Initial", "Not Started", "On Hold"
 ];
 
-const DEALERS_MASTER_RAW = []; // loaded from server
 const PRODUCTS = [
   { key: "3wc", label: "3WC" },
   { key: "3wp", label: "3WP" },
@@ -1431,9 +1423,8 @@ const PRODUCTS = [
 ];
 const CATS = ["A","B","C","D"];
 const CAT_COLORS = { A:'var(--cat-a)', B:'var(--cat-b)', C:'var(--cat-c)', D:'var(--cat-d)' };
-const STORAGE_KEY = "euler_vf_v2";
 
-let state = { dealers: DEALERS_RAW, financiers: FINANCIERS_RAW, financiersMeta: FINANCIERS_META.map(m=>({...m})), mapping: {}, addedDealers: [], dealersMaster: [], fiPolicy: {}, dealerHealth: {} };
+let state = { dealers: [], financiers: [], financiersMeta: [], mapping: {}, addedDealers: [], dealersMaster: [], fiPolicy: {}, dealerHealth: {} };
 let modalContext = null;
 let openDealerCards = new Set();
 let openGapCards = new Set();
@@ -1512,7 +1503,7 @@ async function loadState() {
 
     // Dealer Master
     state.dealersMaster = dmM;
-    // Also populate DEALERS_RAW equivalent for picker
+    // Populate dealer picker list from master
     state.dealers = dmM.map(d => ({ dealer: d.dealerName, location: d.location, rm: d.rmSales||'' }));
 
     // Added Dealers
@@ -1542,7 +1533,9 @@ async function loadState() {
       if (!state.fiPolicy[row.financier]) state.fiPolicy[row.financier] = {};
       const pol = { ind_applicable: row.ind_applicable === 'true', co_applicable: row.co_applicable === 'true', ind: {}, co: {} };
       ['minCibil','maxTenure','maxLoan','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','remarks'].forEach(k => { pol.ind[k] = row['ind_'+k]||''; });
-      ['minCibil','maxTenure','maxLoan','minIrr','companyProperty','personalResidence','guarantor','annualTurnover','vintage','existingFleet','fleetSize','ntc','remarks'].forEach(k => { pol.co[k] = row['co_'+k]||''; });
+      ['minCibil','maxTenure','maxLoan','minIrr','vintage','ntc','itr','remarks'].forEach(k => { pol.co[k] = row['co_'+k]||''; });
+        // Load tiered criteria
+        try { pol.co.tiers = row['co_tiers'] ? JSON.parse(row['co_tiers']) : []; } catch(e) { pol.co.tiers = []; }
       state.fiPolicy[row.financier][row.productKey] = pol;
     });
 
@@ -1607,7 +1600,9 @@ async function saveFIPolicyToSheet(fiName, productKey) {
   const row = { financier: fiName, productKey,
     ind_applicable: String(!!pol.ind_applicable), co_applicable: String(!!pol.co_applicable) };
   ['minCibil','maxTenure','maxLoan','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','remarks'].forEach(k => { row['ind_'+k] = (pol.ind||{})[k]||''; });
-  ['minCibil','maxTenure','maxLoan','minIrr','companyProperty','personalResidence','guarantor','annualTurnover','vintage','existingFleet','fleetSize','ntc','remarks'].forEach(k => { row['co_'+k] = (pol.co||{})[k]||''; });
+  ['minCibil','maxTenure','maxLoan','minIrr','vintage','ntc','itr','remarks'].forEach(k => { row['co_'+k] = (pol.co||{})[k]||''; });
+  // Save tiers as JSON string
+  row['co_tiers'] = JSON.stringify((pol.co||{}).tiers||[]);
   setSaveStatus('saving');
   try { await API.post('/api/fi_policy', row); setSaveStatus('saved'); } catch(e) { setSaveStatus('error'); }
 }
@@ -1640,7 +1635,6 @@ async function deleteDealerMasterFromSheet(dealerName, location) {
 }
 
 // Legacy saveState — no-op (all saves are now granular above)
-function saveState() { /* granular saves used instead */ }
 
 // ── HELPERS ──────────────────────────────────────────────────
 function getDealerFinanciers(d) { return state.mapping[d] || {}; }
@@ -2046,24 +2040,6 @@ function removeFinancier(dealerName, finName) {
   toast(finName+" removed from "+dealerName+".");
 }
 
-function exportData() {
-  const rows = [["Dealer","Location","RM","Financier","Product","Enabled","Category"]];
-  state.addedDealers.forEach(d => {
-    const fins = getDealerFinanciers(d.dealer);
-    if (!Object.keys(fins).length) { rows.push([d.dealer, d.location||"", d.rm, "", "", "", ""]); return; }
-    Object.entries(fins).forEach(([fn, fdata]) => {
-      PRODUCTS.forEach(p => {
-        const pd = fdata.products[p.key];
-        rows.push([d.dealer, d.location||"", d.rm, fn, p.label, pd?.enabled?"Yes":"No", pd?.enabled?(pd.category||""):""]);
-      });
-    });
-  });
-  const csv = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-  a.download = "euler_vf_onboarding.csv"; a.click();
-  toast("Exported as CSV.");
-}
 
 // ── STATS MODAL ──────────────────────────────────────────────
 function computeStatsData() {
@@ -2365,8 +2341,6 @@ function renderFinancierMaster() {
     '<th>Dealer Links</th><th style="width:130px;">Actions</th>' +
     '</tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
-
-
 
 let editingFinancierName = null;
 
@@ -2762,14 +2736,14 @@ const FIP_SEGMENTS = ['ind', 'co'];
 // Field keys for each segment — used for save/load/clear
 const FIP_SEG_FIELDS = {
   ind: ['minCibil','maxTenure','maxLoan','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','remarks'],
-  co:  ['minCibil','maxTenure','maxLoan','minIrr','companyProperty','personalResidence','guarantor','annualTurnover','vintage','existingFleet','fleetSize','ntc','remarks']
+  co:  ['minCibil','maxTenure','maxLoan','minIrr','vintage','ntc','itr','remarks']
 };
 
 // Fields that are toggle yes/no (stored as 'Yes'/'No')
-const FIP_TOGGLE_FIELDS = { ind: ['ntc','ftu','ftb'], co: ['existingFleet','ntc'] };
+const FIP_TOGGLE_FIELDS = { ind: ['ntc','ftu','ftb'], co: ['ntc','itr'] };
 
 // INR display fields
-const FIP_INR_FIELDS = { ind: ['maxLoan'], co: ['maxLoan','annualTurnover'] };
+const FIP_INR_FIELDS = { ind: ['maxLoan'], co: ['maxLoan'] };
 
 // PCT display fields
 const FIP_PCT_FIELDS = { ind: ['minIrr'], co: ['minIrr'] };
@@ -2777,12 +2751,9 @@ const FIP_PCT_FIELDS = { ind: ['minIrr'], co: ['minIrr'] };
 // Mandatory fields per segment (all except remarks)
 const FIP_MANDATORY = {
   ind: ['minCibil','maxTenure','maxLoan','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb'],
-  co:  ['minCibil','maxTenure','maxLoan','minIrr','companyProperty','personalResidence','guarantor','annualTurnover','vintage','existingFleet','ntc']
+  co:  ['minCibil','maxTenure','maxLoan','minIrr','vintage','ntc','itr']
 };
-// conditionally mandatory: fleetSize is mandatory only when existingFleet = Yes
-const FIP_CONDITIONAL_MANDATORY = {
-  co: [{ key: 'fleetSize', condition: function() { return getFIPYNValue('fip_co_existingFleet') === 'Yes'; } }]
-};
+const FIP_CONDITIONAL_MANDATORY = {}; // tiered criteria handled separately
 
 let fiPolicyContext = null;
 
@@ -2842,9 +2813,10 @@ function renderFIPolicy() {
       // Only show products the FI offers per FI Master List
       if (!fiOffersProduct(f.meta, p.key)) return '';
       var pol = getFIPolicy(f.name, p.key);
-      var applicable = pol && (pol.ind_applicable || pol.co_applicable);
-      var cls  = applicable ? "defined" : "na";
-      var icon = applicable ? "✓" : "✕";
+      var indOk = pol && pol.ind_applicable;
+      var coOk  = pol && pol.co_applicable;
+      var cls  = (indOk && coOk) ? "defined" : (indOk || coOk) ? "partial" : "na";
+      var icon = (indOk && coOk) ? "✓" : (indOk || coOk) ? "◑" : "✕";
       return '<button class="fip-product-btn '+cls+'" onclick="openFIPolicyModal(\''+escJs(f.name)+'\',\''+p.key+'\',\''+escJs(p.label)+'\')">'+ icon +' '+ p.label +'</button>';
     }).join("");
     if (!productBtns.trim()) productBtns = '<span style="font-size:11px;color:var(--text-hint);">No products in FI Master</span>';
@@ -2864,8 +2836,9 @@ function renderFIPolicy() {
     '<th style="min-width:320px;">Product Policies</th>'+
     '</tr></thead><tbody>'+rows+'</tbody></table>'+
     '<div style="margin-top:10px;font-size:11px;color:var(--text-hint);display:flex;gap:16px;">'+
-    '<span><span class="fip-product-btn defined" style="pointer-events:none;">✓ Label</span> Policy defined &amp; applicable</span>'+
-    '<span><span class="fip-product-btn na" style="pointer-events:none;">✕ Label</span> Not applicable / Not yet defined</span>'+
+    '<span><span class="fip-product-btn defined" style="pointer-events:none;">✓ Label</span> Both segments defined</span>'+
+    '<span><span class="fip-product-btn partial" style="pointer-events:none;">◑ Label</span> One segment defined</span>'+
+    '<span><span class="fip-product-btn na" style="pointer-events:none;">✕ Label</span> Not defined</span>'+
     '</div>';
 }
 
@@ -2914,17 +2887,11 @@ function toggleFIPYN(fid) {
     label.textContent = 'Yes'; label.style.color = 'var(--ok)';
     track.style.background = 'var(--ok)'; thumb.style.left = '18px';
     // Show fleet size field if existingFleet
-    if (fid === 'fip_co_existingFleet') {
-      var row = document.getElementById('fip_co_fleetSizeRow');
-      if (row) row.style.display = '';
-    }
+
   } else {
     label.textContent = 'No'; label.style.color = 'var(--cat-d)';
     track.style.background = '#ddd'; thumb.style.left = '2px';
-    if (fid === 'fip_co_existingFleet') {
-      var row = document.getElementById('fip_co_fleetSizeRow');
-      if (row) row.style.display = 'none';
-    }
+
   }
 }
 
@@ -2990,14 +2957,121 @@ function toggleFIPolicySegment(seg) {
   var label = document.getElementById('fip_' + seg + '_toggleLabel');
   var nowApplicable = label.textContent !== 'Applicable';
   setFIPSegmentToggle(seg, nowApplicable);
-  if (!nowApplicable && fiPolicyContext) {
+  // Update state immediately but don't save to sheet yet
+  // Save happens when user explicitly closes the modal
+  if (fiPolicyContext) {
     if (!state.fiPolicy) state.fiPolicy = {};
     if (!state.fiPolicy[fiPolicyContext.fiName]) state.fiPolicy[fiPolicyContext.fiName] = {};
     var pol = state.fiPolicy[fiPolicyContext.fiName][fiPolicyContext.productKey] || {};
-    pol[seg + '_applicable'] = false;
+    pol[seg + '_applicable'] = nowApplicable;
     state.fiPolicy[fiPolicyContext.fiName][fiPolicyContext.productKey] = pol;
-    saveState(); renderFIPolicy();
+    renderFIPolicy(); // update table colours live
   }
+}
+
+// ── TIERED CRITERIA (Turnover + Fleet) ──────────────────────
+var _fipTiers = []; // working copy while editing
+
+function addFIPTier() {
+  _fipTiers.push({ minTurnover: '', maxTurnover: '', minFleet: '' });
+  renderFIPTierEditor();
+}
+
+function removeFIPTier(idx) {
+  _fipTiers.splice(idx, 1);
+  renderFIPTierEditor();
+}
+
+function renderFIPTierEditor() {
+  var tbody = document.getElementById('fip_co_tierBody');
+  if (!tbody) return;
+  if (_fipTiers.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:8px;text-align:center;color:var(--text-hint);font-size:11px;border:1px solid var(--border);">No tiers added. Click "+ Add Tier" to define eligibility criteria.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = _fipTiers.map(function(t, i) {
+    return '<tr>' +
+      '<td style="padding:4px 6px;border:1px solid var(--border);">' +
+        '<div style="display:flex;gap:4px;align-items:center;">' +
+          '<input type="number" class="form-select" style="padding:4px 8px;font-size:12px;" placeholder="NA" min="0" ' +
+            'value="' + (t.minTurnover||'') + '" ' +
+            'oninput="_fipTiers[' + i + '].minTurnover=this.value">' +
+        '</div>' +
+      '</td>' +
+      '<td style="padding:4px 6px;border:1px solid var(--border);">' +
+        '<input type="number" class="form-select" style="padding:4px 8px;font-size:12px;" placeholder="NA" min="0" ' +
+          'value="' + (t.maxTurnover||'') + '" ' +
+          'oninput="_fipTiers[' + i + '].maxTurnover=this.value">' +
+      '</td>' +
+      '<td style="padding:4px 6px;border:1px solid var(--border);">' +
+        '<input type="number" class="form-select" style="padding:4px 8px;font-size:12px;" placeholder="NA" min="0" ' +
+          'value="' + (t.minFleet||'') + '" ' +
+          'oninput="_fipTiers[' + i + '].minFleet=this.value">' +
+      '</td>' +
+      '<td style="padding:4px 6px;border:1px solid var(--border);text-align:center;">' +
+        '<button onclick="removeFIPTier(' + i + ')" style="background:none;border:none;color:var(--flag);cursor:pointer;font-size:14px;line-height:1;">×</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function renderFIPTierView(tiers) {
+  if (!tiers || !tiers.length) return '—';
+  var rows = tiers.map(function(t, i) {
+    var parts = [];
+    if (t.minTurnover) parts.push('Turnover ≥ ₹' + Number(t.minTurnover).toLocaleString('en-IN'));
+    if (t.maxTurnover) parts.push('Turnover ≤ ₹' + Number(t.maxTurnover).toLocaleString('en-IN'));
+    if (t.minFleet)    parts.push('Fleet ≥ ' + t.minFleet);
+    return '<div style="font-size:11px;padding:3px 0;color:var(--text);">Tier ' + (i+1) + ': ' + (parts.length ? parts.join(' & ') : 'No criteria') + '</div>';
+  }).join('');
+  return rows;
+}
+
+function enterFIPTierEditMode() {
+  var editDiv = document.getElementById('fip_co_tiersEdit');
+  var viewDiv = document.getElementById('fip_co_tiersView');
+  var addBtn  = document.getElementById('fip_co_addTierBtn');
+  if (editDiv) editDiv.style.display = '';
+  if (viewDiv) viewDiv.style.display = 'none';
+  if (addBtn)  addBtn.style.display = '';
+  renderFIPTierEditor();
+}
+
+function exitFIPTierEditMode(tiers) {
+  var editDiv = document.getElementById('fip_co_tiersEdit');
+  var viewDiv = document.getElementById('fip_co_tiersView');
+  var addBtn  = document.getElementById('fip_co_addTierBtn');
+  if (editDiv) editDiv.style.display = 'none';
+  if (viewDiv) { viewDiv.style.display = ''; viewDiv.innerHTML = renderFIPTierView(tiers); }
+  if (addBtn)  addBtn.style.display = 'none';
+}
+
+function getFIPTiersFromEditor() {
+  return _fipTiers.map(function(t) {
+    return {
+      minTurnover: t.minTurnover ? String(Number(t.minTurnover)||0) : '0',
+      maxTurnover: t.maxTurnover ? String(Number(t.maxTurnover)||0) : '0',
+      minFleet:    t.minFleet    ? String(Number(t.minFleet)||0)    : '0'
+    };
+  });
+}
+
+function checkTierEligibility(tiers, customerTurnover, customerFleet) {
+  if (!tiers || !tiers.length) return { status: 'unknown', msg: 'No criteria defined' };
+  for (var i = 0; i < tiers.length; i++) {
+    var t = tiers[i];
+    var minT = Number(t.minTurnover)||0;
+    var maxT = Number(t.maxTurnover)||0;
+    var minF = Number(t.minFleet)||0;
+    var cT   = Number(customerTurnover)||0;
+    var cF   = Number(customerFleet)||0;
+    var pass = true;
+    if (minT > 0 && cT < minT) pass = false;
+    if (maxT > 0 && cT > maxT) pass = false;
+    if (minF > 0 && cF < minF) pass = false;
+    if (pass) return { status: 'pass', tier: i+1 };
+  }
+  return { status: 'fail', msg: 'No tier matched' };
 }
 
 function openFIPolicyModal(fiName, productKey, productLabel) {
@@ -3032,15 +3106,16 @@ function openFIPolicyModal(fiName, productKey, productLabel) {
         if (eEl) { eEl.value = val || ''; eEl.style.display = 'none'; }
       }
     });
-    // fleet size row
-    if (seg === 'co') {
-      var fleetRow = document.getElementById('fip_co_fleetSizeRow');
-      if (fleetRow) fleetRow.style.display = data.existingFleet === 'Yes' ? '' : 'none';
-    }
+
     var editBtn = document.getElementById('fip_' + seg + '_editBtn');
     var saveBtn = document.getElementById('fip_' + seg + '_saveBtn');
     if (editBtn) editBtn.style.display = applicable ? '' : 'none';
     if (saveBtn) saveBtn.style.display = 'none';
+    // Init tiers for co
+    if (seg === 'co') {
+      _fipTiers = JSON.parse(JSON.stringify((data.tiers && data.tiers.length) ? data.tiers : []));
+      exitFIPTierEditMode(_fipTiers);
+    }
   });
 
   document.getElementById('fiPolicyModalOverlay').classList.add('show');
@@ -3060,11 +3135,7 @@ function enterFIPSegmentEditMode(seg) {
       // enable cursor in edit mode
       var tk = document.getElementById(fid + '_track');
       if (tk) { tk.style.cursor = 'pointer'; tk.style.opacity = '1'; }
-      if (fid === 'fip_co_existingFleet') {
-        var fleetRow = document.getElementById('fip_co_fleetSizeRow');
-        var curVal = getFIPYNValue(fid);
-        if (fleetRow) fleetRow.style.display = curVal === 'Yes' ? '' : 'none';
-      }
+
     } else if (isWrapField(seg, key)) {
       var wrapEl = document.getElementById(fid + '_edit_wrap');
       if (wrapEl) wrapEl.style.display = 'flex';
@@ -3079,6 +3150,7 @@ function enterFIPSegmentEditMode(seg) {
   var saveBtn = document.getElementById('fip_' + seg + '_saveBtn');
   if (editBtn) editBtn.style.display = 'none';
   if (saveBtn) saveBtn.style.display = '';
+  if (seg === 'co') enterFIPTierEditMode();
 }
 
 function enterFIPSegmentViewMode(seg) {
@@ -3106,6 +3178,7 @@ function enterFIPSegmentViewMode(seg) {
   var saveBtn = document.getElementById('fip_' + seg + '_saveBtn');
   if (editBtn) editBtn.style.display = '';
   if (saveBtn) saveBtn.style.display = 'none';
+  if (seg === 'co') exitFIPTierEditMode(_fipTiers);
 }
 
 function fipSegmentMandatoryCheck(seg) {
@@ -3140,8 +3213,7 @@ const FIP_FIELD_LABELS = {
   guarantor: 'Guarantor Required', bankStatement: 'L6M Bank Statement',
   licenseType: 'License Type', ntc: 'NTC Loan',
   companyProperty: 'Company Property', personalResidence: 'Personal Residence',
-  annualTurnover: 'Annual Turnover', vintage: 'Vintage', existingFleet: 'Existing Fleet',
-  fleetSize: 'Fleet Size'
+  vintage: 'Vintage'
 };
 
 function saveFIPSegment(seg) {
@@ -3179,6 +3251,12 @@ function saveFIPSegment(seg) {
       else vEl.textContent = val || '—';
     }
   });
+  if (seg === 'co') {
+    pol.co = pol.co || {};
+    pol.co.tiers = getFIPTiersFromEditor();
+    _fipTiers = pol.co.tiers;
+    exitFIPTierEditMode(_fipTiers);
+  }
   state.fiPolicy[fiName][productKey] = pol;
   enterFIPSegmentViewMode(seg);
   saveFIPolicyToSheet(fiName, productKey);
@@ -3199,11 +3277,25 @@ function closeFIPolicyModal() {
     toast('⚠ Save or fill mandatory fields: ' + allMissing.join('; '));
     return;
   }
+  // Persist current toggle state to state.fiPolicy before saving
+  if (fiPolicyContext) {
+    var fiName = fiPolicyContext.fiName;
+    var productKey = fiPolicyContext.productKey;
+    if (!state.fiPolicy) state.fiPolicy = {};
+    if (!state.fiPolicy[fiName]) state.fiPolicy[fiName] = {};
+    if (!state.fiPolicy[fiName][productKey]) state.fiPolicy[fiName][productKey] = {};
+    var pol = state.fiPolicy[fiName][productKey];
+    // Read current toggle state from DOM and write to state
+    FIP_SEGMENTS.forEach(function(seg) {
+      var label = document.getElementById('fip_' + seg + '_toggleLabel');
+      if (label) pol[seg + '_applicable'] = label.textContent === 'Applicable';
+    });
+    saveFIPolicyToSheet(fiName, productKey);
+    renderFIPolicy();
+  }
   document.getElementById('fiPolicyModalOverlay').classList.remove('show');
   fiPolicyContext = null;
 }
-
-
 
 // ── HEALTH STATUS ─────────────────────────────────────────────
 let healthContext = null;
@@ -3284,12 +3376,8 @@ const MATCHER_IND_FIELDS = [
 const MATCHER_CO_FIELDS = [
   { key:'minCibil',          label:'CIBIL Score',              type:'number', placeholder:'e.g. 720' },
   { key:'maxLoan',           label:'Loan Amount Required (₹)', type:'number', placeholder:'e.g. 500000' },
-  { key:'companyProperty',   label:'Company Property',         type:'select', opts:['Rented','Own'] },
-  { key:'personalResidence', label:'Personal Residence',       type:'select', opts:['Rented','Own'] },
-  { key:'guarantor',         label:'Has Guarantor?',           type:'select', opts:['Yes','No'] },
   { key:'annualTurnover',    label:'Annual Turnover (₹)',      type:'number', placeholder:'e.g. 1200000' },
   { key:'vintage',           label:'Business Vintage (years)', type:'number', placeholder:'e.g. 3' },
-  { key:'existingFleet',     label:'Has Existing Fleet?',      type:'select', opts:['Yes','No'] },
   { key:'ntc',               label:'New to Credit (NTC)?',     type:'select', opts:['Yes','No'] }
 ];
 
@@ -3392,12 +3480,9 @@ function checkEligibility(policy, profile, type) {
   check(seg.minCibil,          profile.minCibil,          'Min CIBIL',          'min_cibil');
   check(seg.maxLoan,           profile.maxLoan,            'Max Loan Amount',    'max_loan');
   check(seg.residence,         profile.residence,          'Residence',          'match_or_either');
-  check(seg.guarantor,         profile.guarantor,          'Guarantor',          'match_or_either');
   check(seg.bankStatement,     profile.bankStatement,      'L6M Bank Statement', 'match_or_either');
   check(seg.licenseType,       profile.licenseType,        'License Type',       'match_or_either');
   check(seg.ntc,               profile.ntc,                'NTC',                'ntc');
-  check(seg.companyProperty,   profile.companyProperty,    'Company Property',   'match_or_either');
-  check(seg.personalResidence, profile.personalResidence,  'Personal Residence', 'match_or_either');
   check(seg.vintage,           profile.vintage,            'Vintage',            'min_vintage');
   check(seg.annualTurnover,    profile.annualTurnover,     'Annual Turnover',    'min_turnover');
 
@@ -3570,8 +3655,7 @@ function exportFIPolicy() {
     "Ind Residence","Ind Guarantor","Ind Bank Statement",
     "Ind License Type","Ind NTC","Ind FTU","Ind FTB","Ind Remarks",
     "CO Applicable","CO Min CIBIL","CO Max Tenure","CO Max Loan","CO Min IRR",
-    "CO Company Property","CO Personal Residence","CO Guarantor",
-    "CO Annual Turnover","CO Vintage","CO Existing Fleet","CO Fleet Size","CO NTC","CO Remarks"];
+    "CO Vintage","CO NTC","CO ITR Filed","CO Turnover/Fleet Tiers","CO Remarks"];
   const rows = [headers];
   state.financiers.forEach(fi => {
     PRODUCTS.forEach(p => {
@@ -3585,9 +3669,7 @@ function exportFIPolicy() {
         i.bankStatement||"", i.licenseType||"", i.ntc||"", i.ftu||"", i.ftb||"", i.remarks||"",
         pol.co_applicable?"Yes":"No",
         c.minCibil||"", c.maxTenure||"", c.maxLoan||"", c.minIrr||"",
-        c.companyProperty||"", c.personalResidence||"", c.guarantor||"",
-        c.annualTurnover||"", c.vintage||"", c.existingFleet||"",
-        c.fleetSize||"", c.ntc||"", c.remarks||""
+        c.vintage||"", c.ntc||"", c.itr||"", JSON.stringify((c.tiers||[])), c.remarks||""
       ]);
     });
   });

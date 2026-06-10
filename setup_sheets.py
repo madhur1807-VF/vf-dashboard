@@ -4938,6 +4938,25 @@ def main():
                "mouSignedMonth","onboardingDate","instruments","priority","ttl",
                "helpRequired","sourcedBy","spoc","secondaryPoc","contactDetails","comments"]
     ws = get_or_create_sheet(sh, "FI_Master", headers)
+
+    # ── Migrate legacy categories ──
+    CAT_MAP = {
+        "NBFC": "PAN India NBFC",
+        "New Age Fintech": "Fintech/Green NBFC",
+        "Fintech": "Fintech/Green NBFC",
+        "Cooperative Bank": "Cooperative/Gramin/Regional Bank",
+        "Gramin Bank": "Cooperative/Gramin/Regional Bank",
+        "Regional Bank": "Cooperative/Gramin/Regional Bank",
+    }
+    STATUS_MAP = {
+        "Discussion - Inactive": "Discussion - Initial",
+    }
+    for m in FI_META:
+        if m.get("category") in CAT_MAP:
+            m["category"] = CAT_MAP[m["category"]]
+        if m.get("status") in STATUS_MAP:
+            m["status"] = STATUS_MAP[m["status"]]
+
     rows = [[m.get(h,"") for h in headers] for m in FI_META]
     if rows: ws.append_rows(rows)
     print(f"  → {len(rows)} financiers written")
@@ -4972,12 +4991,10 @@ def main():
     get_or_create_sheet(sh, "FI_Policy",
         ["financier","productKey",
          "ind_applicable","ind_minCibil","ind_maxTenure","ind_maxLoan","ind_minIrr",
-         "ind_processingFee","ind_residence","ind_guarantor","ind_bankStatement",
-         "ind_licenseType","ind_ntc","ind_remarks",
+         "ind_residence","ind_guarantor","ind_bankStatement",
+         "ind_licenseType","ind_ntc","ind_ftu","ind_ftb","ind_remarks",
          "co_applicable","co_minCibil","co_maxTenure","co_maxLoan","co_minIrr",
-         "co_companyProperty","co_personalResidence","co_guarantor",
-         "co_annualTurnover","co_vintage","co_existingFleet","co_fleetSize",
-         "co_ntc","co_remarks"])
+         "co_vintage","co_ntc","co_itr","co_tiers","co_remarks"])
     print("  → Ready (empty, filled by dashboard)")
 
     # ── 6. Dealer_Health ─────────────────────────────────────
