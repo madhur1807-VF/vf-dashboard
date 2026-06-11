@@ -5,7 +5,7 @@ Local:   python server.py
 Railway: auto-started via Procfile
 """
 
-import json, os, threading, traceback
+import json, os, threading, traceback, secrets, time
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
@@ -13,6 +13,39 @@ from urllib.parse import urlparse, parse_qs
 SHEET_ID   = "1jWmwJJZJzLX0oCSeRm24bCNNQ29pn0jAOl9Y9pUlU-4"
 CREDS_FILE = "credentials.json"
 PORT       = int(os.environ.get("PORT", 9000))  # Railway sets PORT env var
+
+# ── AUTH ── (set LOGIN_ID and LOGIN_PASS in Railway env variables)
+LOGIN_ID      = os.environ.get("LOGIN_ID",   "admin")
+LOGIN_PASS    = os.environ.get("LOGIN_PASS", "euler@1234$")
+SESSION_TTL   = int(os.environ.get("SESSION_TTL", 3600))  # seconds, default 60 min
+
+# ── SESSION STORE ─────────────────────────────────────────────
+_sessions     = {}   # token -> expiry timestamp
+_session_lock = threading.Lock()
+
+def create_session():
+    token = secrets.token_hex(32)
+    with _session_lock:
+        # Clean expired sessions
+        now = time.time()
+        expired = [t for t, exp in _sessions.items() if exp < now]
+        for t in expired: del _sessions[t]
+        _sessions[token] = now + SESSION_TTL
+    return token
+
+def validate_session(token):
+    if not token: return False
+    with _session_lock:
+        exp = _sessions.get(token)
+        if not exp or exp < time.time():
+            if token in _sessions: del _sessions[token]
+            return False
+        _sessions[token] = time.time() + SESSION_TTL  # refresh on activity
+        return True
+
+def invalidate_session(token):
+    with _session_lock:
+        _sessions.pop(token, None)
 
 # ── GOOGLE SHEETS CLIENT ──────────────────────────────────────
 _sh   = None
@@ -126,7 +159,11 @@ class Handler(SimpleHTTPRequestHandler):
         # ── API routes ──────────────────────────────────────
         if path.startswith("/api/"):
             try:
-                if   path == "/api/fi_master":     self.send_json(200, api_get("FI_Master"))
+                if path not in ("/api/login",):
+                    token = self.headers.get("X-Session-Token","")
+                    if not validate_session(token):
+                        self.send_json(401, {"error": "Unauthorized"}); return
+                if   path == "/api/fi_master":      self.send_json(200, api_get("FI_Master"))
                 elif path == "/api/dealer_master":  self.send_json(200, api_get("Dealer_Master"))
                 elif path == "/api/added_dealers":  self.send_json(200, api_get("Added_Dealers"))
                 elif path == "/api/onboarding":     self.send_json(200, api_get("FI_Onboarding"))
@@ -147,7 +184,22 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_json(404, {"error": "Not found"}); return
         try:
             body = self.read_body()
-            if   path == "/api/fi_master":     api_save_fi_master(body)
+            if path not in ("/api/login",):
+                token = self.headers.get("X-Session-Token","")
+                if not validate_session(token):
+                    self.send_json(401, {"error": "Unauthorized"}); return
+            if   path == "/api/login":
+                ok = (body.get("id","") == LOGIN_ID and body.get("pass","") == LOGIN_PASS)
+                if ok:
+                    token = create_session()
+                    self.send_json(200, {"ok": True, "token": token})
+                else:
+                    self.send_json(200, {"ok": False})
+                return
+            elif path == "/api/logout":
+                invalidate_session(self.headers.get("X-Session-Token",""))
+                self.send_json(200, {"ok": True}); return
+            elif path == "/api/fi_master":     api_save_fi_master(body)
             elif path == "/api/dealer_master": api_save_dealer_master(body)
             elif path == "/api/added_dealers": api_save_added_dealer(body)
             elif path == "/api/onboarding":    api_save_onboarding(body)
@@ -165,6 +217,9 @@ class Handler(SimpleHTTPRequestHandler):
         qs   = parse_qs(urlparse(self.path).query)
         q    = lambda k: qs.get(k, [""])[0]
         try:
+            token = self.headers.get("X-Session-Token","")
+            if not validate_session(token):
+                self.send_json(401, {"error": "Unauthorized"}); return
             if   path == "/api/fi_master":     api_delete_fi_master(q("name"))
             elif path == "/api/dealer_master": api_delete_dealer_master(q("dealerName"), q("location"))
             elif path == "/api/added_dealers": api_delete_added_dealer(q("dealer"), q("location"))
