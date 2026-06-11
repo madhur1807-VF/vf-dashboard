@@ -524,12 +524,61 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .loader-text { font-size: 13px; color: var(--text-muted); }
 
+
+  /* ── Login Screen ── */
+  #loginScreen {
+    position: fixed; inset: 0; z-index: 10000;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  #loginScreen.hide { display: none; }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: var(--shadow-md);
+  }
+  .login-logo { text-align: center; margin-bottom: 28px; }
+  .login-logo-text { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
+  .login-logo-text span { background: #f59e0b; color: #0d0f18; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+  .login-subtitle { font-size: 13px; color: var(--text-muted); text-align: center; margin-top: 4px; }
+  .login-error { background: var(--cat-d-bg); color: var(--cat-d); border: 1px solid var(--cat-d-border); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; text-align: center; }
+  .login-error.show { display: block; }
+
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
 <!-- ── HEADER ── -->
+
+
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-text">Euler Motors <span>VF</span></div>
+      <div class="login-subtitle">Vehicle Financing Dashboard</div>
+    </div>
+    <div class="login-error" id="loginError">Incorrect login ID or password.</div>
+    <div class="form-group">
+      <label class="form-label">Login ID</label>
+      <input type="text" class="form-select" id="loginId" placeholder="Enter login ID" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <div style="position:relative;">
+        <input type="password" class="form-select" id="loginPass" placeholder="Enter password" autocomplete="current-password" style="padding-right:40px;" onkeydown="if(event.key==='Enter')attemptLogin()">
+        <button onclick="toggleLoginPassVisibility()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;" id="loginPassToggle">👁</button>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px;padding:11px;" onclick="attemptLogin()">Sign In</button>
+  </div>
+</div>
 
 <div id="appLoader">
   <div class="loader-logo">Euler Motors <span>VF</span></div>
@@ -556,6 +605,7 @@
     <div class="save-dot" id="saveDot"></div>
     <span id="saveLabel">Saved</span>
   </div>
+  <button class="btn btn-secondary btn-sm" onclick="logout()" style="font-size:11px;padding:4px 10px;margin-left:8px;">Sign Out</button>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════
@@ -1110,11 +1160,6 @@
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
             <div class="form-group" style="margin:0;">
-      <label class="form-label">Minimum CIBIL <span style="color:var(--flag);">*</span></label>
-      <div id="fip_co_minCibil_view" class="fip-view-field">—</div>
-      <input type="number" class="form-select" id="fip_co_minCibil" placeholder="300" style="display:none;" min="0">
-    </div>
-            <div class="form-group" style="margin:0;">
       <label class="form-label">Max Loan Tenure (months) <span style="color:var(--flag);">*</span></label>
       <div id="fip_co_maxTenure_view" class="fip-view-field">—</div>
       <input type="number" class="form-select" id="fip_co_maxTenure" placeholder="e.g. 48" style="display:none;" min="0">
@@ -1515,14 +1560,27 @@ let productFilter = '';
 
 // ── API HELPERS ───────────────────────────────────────────────
 const API = {
-  get: async (path) => {
-    const r = await fetch(path);
-    const text = await r.text();
-    try { return JSON.parse(text); }
-    catch(e) { console.error('Non-JSON response from', path, ':', text.slice(0,100)); return []; }
+  _headers: function(extra) {
+    var h = Object.assign({'Content-Type':'application/json'}, extra||{});
+    var tok = sessionStorage.getItem('vf_token');
+    if (tok) h['X-Session-Token'] = tok;
+    return h;
   },
-  post: (path, data) => fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) }).then(r => r.json()),
-  delete: (path) => fetch(path, { method:'DELETE' }).then(r => r.json())
+  _handle: function(r) {
+    if (r.status === 401) { showLoginScreen('Session expired. Please log in again.'); return []; }
+    return r.text().then(function(text) {
+      try { return JSON.parse(text); } catch(e) { return []; }
+    });
+  },
+  get: function(path) {
+    return fetch(path, { headers: this._headers() }).then(r => this._handle(r));
+  },
+  post: function(path, data) {
+    return fetch(path, { method:'POST', headers: this._headers(), body: JSON.stringify(data) }).then(r => this._handle(r));
+  },
+  delete: function(path) {
+    return fetch(path, { method:'DELETE', headers: this._headers() }).then(r => this._handle(r));
+  }
 };
 
 function setSaveStatus(status) {
@@ -1616,7 +1674,7 @@ async function loadState() {
       if (!state.fiPolicy[row.financier]) state.fiPolicy[row.financier] = {};
       const pol = { ind_applicable: row.ind_applicable === 'true', co_applicable: row.co_applicable === 'true', ind: {}, co: {} };
       ['minCibil','maxTenure','maxLoan','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','remarks'].forEach(k => { pol.ind[k] = row['ind_'+k]||''; });
-      ['minCibil','maxTenure','maxLoan','minIrr','vintage','ntc','itr','remarks'].forEach(k => { pol.co[k] = row['co_'+k]||''; });
+      ['maxTenure','maxLoan','minIrr','vintage','ntc','itr','remarks'].forEach(k => { pol.co[k] = row['co_'+k]||''; });
         // Load tiered criteria
         try { pol.co.tiers = row['co_tiers'] ? JSON.parse(row['co_tiers']) : []; } catch(e) { pol.co.tiers = []; }
       state.fiPolicy[row.financier][row.productKey] = pol;
@@ -1683,7 +1741,7 @@ async function saveFIPolicyToSheet(fiName, productKey) {
   const row = { financier: fiName, productKey,
     ind_applicable: String(!!pol.ind_applicable), co_applicable: String(!!pol.co_applicable) };
   ['minCibil','maxTenure','maxLoan','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','remarks'].forEach(k => { row['ind_'+k] = (pol.ind||{})[k]||''; });
-  ['minCibil','maxTenure','maxLoan','minIrr','vintage','ntc','itr','remarks'].forEach(k => { row['co_'+k] = (pol.co||{})[k]||''; });
+  ['maxTenure','maxLoan','minIrr','vintage','ntc','itr','remarks'].forEach(k => { row['co_'+k] = (pol.co||{})[k]||''; });
   // Save tiers as JSON string
   row['co_tiers'] = JSON.stringify((pol.co||{}).tiers||[]);
   setSaveStatus('saving');
@@ -2821,7 +2879,7 @@ const FIP_SEGMENTS = ['ind', 'co'];
 // Field keys for each segment — used for save/load/clear
 const FIP_SEG_FIELDS = {
   ind: ['minCibil','maxTenure','maxLoan','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','remarks'],
-  co:  ['minCibil','maxTenure','maxLoan','minIrr','vintage','ntc','itr','remarks']
+  co:  ['maxTenure','maxLoan','minIrr','vintage','ntc','itr','remarks']
 };
 
 // Fields that are toggle yes/no (stored as 'Yes'/'No')
@@ -2836,7 +2894,7 @@ const FIP_PCT_FIELDS = { ind: ['minIrr'], co: ['minIrr'] };
 // Mandatory fields per segment (all except remarks)
 const FIP_MANDATORY = {
   ind: ['minCibil','maxTenure','maxLoan','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb'],
-  co:  ['minCibil','maxTenure','maxLoan','minIrr','vintage','ntc','itr']
+  co:  ['maxTenure','maxLoan','minIrr','vintage','ntc','itr']
 };
 const FIP_CONDITIONAL_MANDATORY = {}; // tiered criteria handled separately
 
@@ -3293,7 +3351,7 @@ function fipSegmentMandatoryCheck(seg) {
 }
 
 const FIP_FIELD_LABELS = {
-  minCibil: 'Minimum CIBIL', maxTenure: 'Max Loan Tenure', maxLoan: 'Max Loan Amount',
+  maxTenure: 'Max Loan Tenure', maxLoan: 'Max Loan Amount',
   minIrr: 'Minimum IRR', residence: 'Residence Criteria',
   guarantor: 'Guarantor Required', bankStatement: 'L6M Bank Statement',
   licenseType: 'License Type', ntc: 'NTC Loan',
@@ -3739,7 +3797,7 @@ function exportFIPolicy() {
     "Ind Applicable","Ind Min CIBIL","Ind Max Tenure","Ind Max Loan","Ind Min IRR",
     "Ind Residence","Ind Guarantor","Ind Bank Statement",
     "Ind License Type","Ind NTC","Ind FTU","Ind FTB","Ind Remarks",
-    "CO Applicable","CO Min CIBIL","CO Max Tenure","CO Max Loan","CO Min IRR",
+    "CO Applicable","CO Max Tenure","CO Max Loan","CO Min IRR",
     "CO Vintage","CO NTC","CO ITR Filed","CO Turnover/Fleet Tiers","CO Remarks"];
   const rows = [headers];
   state.financiers.forEach(fi => {
@@ -3753,7 +3811,7 @@ function exportFIPolicy() {
         i.residence||"", i.guarantor||"",
         i.bankStatement||"", i.licenseType||"", i.ntc||"", i.ftu||"", i.ftb||"", i.remarks||"",
         pol.co_applicable?"Yes":"No",
-        c.minCibil||"", c.maxTenure||"", c.maxLoan||"", c.minIrr||"",
+        c.maxTenure||"", c.maxLoan||"", c.minIrr||"",
         c.vintage||"", c.ntc||"", c.itr||"", JSON.stringify((c.tiers||[])), c.remarks||""
       ]);
     });
@@ -3999,6 +4057,81 @@ function exportTAIF() {
   xlsxDownload(rows, "TA_IF Status", "Euler_TAIF_Status.xlsx");
 }
 
+// ── LOGIN ─────────────────────────────────────────────────────
+var _inactivityTimer = null;
+var SESSION_TIMEOUT_MS = 60 * 60 * 1000; // 60 minutes
+
+function startInactivityTimer() {
+  clearTimeout(_inactivityTimer);
+  _inactivityTimer = setTimeout(function() {
+    logout('You have been logged out due to inactivity.');
+  }, SESSION_TIMEOUT_MS);
+}
+
+function resetInactivityTimer() {
+  if (sessionStorage.getItem('vf_token')) startInactivityTimer();
+}
+
+function logout(msg) {
+  var tok = sessionStorage.getItem('vf_token');
+  if (tok) {
+    fetch('/api/logout', { method:'POST', headers:{'Content-Type':'application/json','X-Session-Token':tok} }).catch(function(){});
+  }
+  sessionStorage.removeItem('vf_token');
+  clearTimeout(_inactivityTimer);
+  showLoginScreen(msg || '');
+}
+
+function showLoginScreen(msg) {
+  document.getElementById('loginScreen').classList.remove('hide');
+  document.getElementById('loginId').value = '';
+  document.getElementById('loginPass').value = '';
+  if (msg) {
+    document.getElementById('loginError').textContent = msg;
+    document.getElementById('loginError').classList.add('show');
+  } else {
+    document.getElementById('loginError').classList.remove('show');
+  }
+  document.getElementById('loginId').focus();
+}
+
+function attemptLogin() {
+  var id   = (document.getElementById('loginId').value||'').trim();
+  var pass = (document.getElementById('loginPass').value||'').trim();
+  if (!id || !pass) { document.getElementById('loginError').classList.add('show'); return; }
+  var btn = document.querySelector('#loginScreen .btn-primary');
+  if (btn) { btn.textContent = 'Signing in…'; btn.disabled = true; }
+  fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: id, pass: pass })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    if (data.ok) {
+      sessionStorage.setItem('vf_token', data.token);
+      document.getElementById('loginScreen').classList.add('hide');
+      document.getElementById('loginError').classList.remove('show');
+      startInactivityTimer();
+      (async () => { await loadState(); renderAll(); })();
+    } else {
+      document.getElementById('loginError').classList.add('show');
+      document.getElementById('loginPass').value = '';
+      document.getElementById('loginPass').focus();
+      if (btn) { btn.textContent = 'Sign In'; btn.disabled = false; }
+    }
+  }).catch(function() {
+    document.getElementById('loginError').textContent = 'Could not reach server. Is server.py running?';
+    document.getElementById('loginError').classList.add('show');
+    if (btn) { btn.textContent = 'Sign In'; btn.disabled = false; }
+  });
+}
+
+function toggleLoginPassVisibility() {
+  var inp = document.getElementById('loginPass');
+  var btn = document.getElementById('loginPassToggle');
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁'; }
+}
+
 // ══════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════
@@ -4021,7 +4154,30 @@ document.addEventListener("click", e => {
   if (wrap && !wrap.contains(e.target)) document.getElementById("dealerPickerDropdown").classList.remove("open");
 });
 
-(async () => { await loadState(); renderAll(); })();
+// Check for existing session on page load
+(function() {
+  var tok = sessionStorage.getItem('vf_token');
+  if (tok) {
+    // Validate existing token with server
+    fetch('/api/fi_master', { headers: {'X-Session-Token': tok} }).then(function(r) {
+      if (r.status === 401) {
+        sessionStorage.removeItem('vf_token');
+        document.getElementById('loginId').focus();
+      } else {
+        document.getElementById('loginScreen').classList.add('hide');
+        startInactivityTimer();
+        (async () => { await loadState(); renderAll(); })();
+      }
+    }).catch(function() { document.getElementById('loginId').focus(); });
+  } else {
+    document.getElementById('loginId').focus();
+  }
+})();
+
+// Reset inactivity timer on any user interaction
+['mousemove','keydown','click','scroll','touchstart'].forEach(function(evt) {
+  document.addEventListener(evt, resetInactivityTimer, { passive: true });
+});
 </script>
 </body>
 </html>
