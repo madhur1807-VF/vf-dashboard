@@ -89,6 +89,7 @@ def api_save_fi_policy(d):      upsert_row(ws("FI_Policy"),      {"financier": d
 def api_save_dealer_health(d):  upsert_row(ws("Dealer_Health"),  {"dealer": d["dealer"], "location": d["location"]}, d)
 def api_get_taif():             return rows_to_dicts(ws("TA_IF_Status")) or []
 def api_save_taif(d):           upsert_row(ws("TA_IF_Status"), {"dealerCode": d["dealerCode"], "city": d["city"]}, d)
+def api_delete_taif(dealer_code, city): delete_row(ws("TA_IF_Status"), {"dealerCode": dealer_code, "city": city})
 
 # ── HTTP HANDLER ──────────────────────────────────────────────
 class Handler(SimpleHTTPRequestHandler):
@@ -168,6 +169,7 @@ class Handler(SimpleHTTPRequestHandler):
             elif path == "/api/dealer_master": api_delete_dealer_master(q("dealerName"), q("location"))
             elif path == "/api/added_dealers": api_delete_added_dealer(q("dealer"), q("location"))
             elif path == "/api/onboarding":    api_delete_onboarding(q("dealer"), q("location"), q("financier"))
+            elif path == "/api/taif":             api_delete_taif(q("dealerCode"), q("city"))
             else: self.send_json(404, {"error": f"Unknown: {path}"}); return
             self.send_json(200, {"ok": True})
         except Exception as e:

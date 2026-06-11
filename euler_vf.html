@@ -1425,6 +1425,60 @@
   </div>
 </div>
 
+<!-- ── TAIF EDIT MODAL ── -->
+<div class="modal-overlay" id="taifEditModalOverlay">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="taifEditModalTitle">Edit Record</div>
+        <div class="modal-sub">Update TA/IF status for this dealer</div>
+      </div>
+      <button class="modal-close" onclick="closeTAIFEditModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div class="form-group" style="margin:0;"><label class="form-label">Dealer Name</label><input type="text" class="form-select" id="taif_dealerName" placeholder=""></div>
+        <div class="form-group" style="margin:0;"><label class="form-label">State</label><input type="text" class="form-select" id="taif_state" placeholder=""></div>
+        <div class="form-group" style="margin:0;"><label class="form-label">City</label><input type="text" class="form-select" id="taif_city" placeholder=""></div>
+        <div class="form-group" style="margin:0;"><label class="form-label">Principal Name</label><input type="text" class="form-select" id="taif_principalName" placeholder=""></div>
+        <div class="form-group" style="margin:0;"><label class="form-label">Dealer Code</label><input type="text" class="form-select" id="taif_dealerCode" placeholder=""></div>
+        <div class="form-group" style="margin:0;"><label class="form-label">Dealer Status</label><select class="form-select" id="taif_dealerStatus"><option>Active</option><option>Inactive</option></select></div>
+        <div class="form-group" style="margin:0;"><label class="form-label">LOI Issue Date</label><input type="text" class="form-select" id="taif_loiIssueDate" placeholder="e.g. 01-Jan-2024"></div>
+        <div class="form-group" style="margin:0;"><label class="form-label">Code Creation Date</label><input type="text" class="form-select" id="taif_codeCreationDate" placeholder="e.g. 15-Jan-2024"></div>
+        <div class="form-group" style="margin:0;"><label class="form-label">Last 3M Avg TO</label><input type="text" class="form-select" id="taif_lastAvgTO" placeholder=""></div>
+      </div>
+      <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Financier Status</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div class="form-group" style="margin:0;"><label class="form-label">HFCL</label>
+          <select class="form-select" id="taif_hfcl"><option value="">—</option></select></div>
+        <div class="form-group" style="margin:0;"><label class="form-label">Ecofy</label>
+          <select class="form-select" id="taif_ecofy"><option value="">—</option></select></div>
+        <div class="form-group" style="margin:0;"><label class="form-label">Sriram</label>
+          <select class="form-select" id="taif_sriram"><option value="">—</option></select></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeTAIFEditModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTAIFEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TAIF CONFIRM DELETE MODAL ── -->
+<div class="confirm-modal-overlay" id="confirmTAIFOverlay">
+  <div class="confirm-modal">
+    <div class="confirm-modal-body">
+      <div class="confirm-modal-icon">⚠️</div>
+      <div class="confirm-modal-title">Delete Record?</div>
+      <div class="confirm-modal-sub">You are about to permanently delete the record for <span class="confirm-modal-dealer" id="confirmTAIFName"></span>. This cannot be undone.</div>
+    </div>
+    <div class="confirm-modal-footer">
+      <button class="btn btn-secondary" onclick="closeConfirmTAIF()">Cancel</button>
+      <button class="btn btn-danger" id="confirmTAIFBtn">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toastMsg"></span></div>
 
 <script>
@@ -3793,6 +3847,8 @@ function renderTAIF() {
     '<div class="sum-card"><div class="sum-label">Disbursed</div><div class="sum-value sum-ok">' + disbursed + '</div><div class="sum-sub">at least 1 FI</div></div>' +
     '<div class="sum-card"><div class="sum-label">Documentation Stage</div><div class="sum-value" style="color:var(--cat-c);">' + docStage + '</div><div class="sum-sub">at least 1 FI</div></div>';
 
+  _taifFilteredList = filtered;
+
   if (!filtered.length) {
     document.getElementById("taifTable").innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div>No records match your filters.</div></div>';
     return;
@@ -3813,7 +3869,10 @@ function renderTAIF() {
       '<td>' + taifBadge(r.hfcl) + '</td>' +
       '<td>' + taifBadge(r.ecofy) + '</td>' +
       '<td>' + taifBadge(r.sriram) + '</td>' +
-      '<td style="font-size:11px;color:var(--text-muted);max-width:180px;">' + escHtml(r.remarks||'') + '</td>' +
+      '<td style="white-space:nowrap;">' +
+        '<button class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:11px;" onclick="openTAIFEditModal(' + idx + ')">Edit</button> ' +
+        '<button class="btn btn-danger btn-sm" style="padding:3px 8px;font-size:11px;" onclick="confirmDeleteTAIF(' + idx + ')">Delete</button>' +
+      '</td>' +
     '</tr>';
   }).join('');
 
@@ -3829,10 +3888,96 @@ function renderTAIF() {
     '<th style="min-width:140px;">HFCL</th>' +
     '<th style="min-width:140px;">Ecofy</th>' +
     '<th style="min-width:140px;">Sriram</th>' +
-    '<th style="min-width:160px;">Remarks</th>' +
+    '<th style="width:100px;">Actions</th>' +
     '</tr></thead>' +
     '<tbody>' + rows + '</tbody>' +
     '</table></div>';
+}
+
+// ── TAIF EDIT / DELETE ────────────────────────────────────────
+const TAIF_STATUSES = [
+  'Disburment', 'Documentation stage', 'SL received',
+  'Eligible but Not applied', 'Disccusion Initiated',
+  'SL Rejected', 'Not Eligible', 'NA', ''
+];
+
+var _taifEditIdx = null;
+var _taifFilteredList = [];
+
+function populateTAIFDropdown(id, selected) {
+  var sel = document.getElementById(id);
+  if (!sel) return;
+  sel.innerHTML = TAIF_STATUSES.map(function(s) {
+    return '<option value="' + s + '"' + (s === selected ? ' selected' : '') + '>' + (s||'—') + '</option>';
+  }).join('');
+}
+
+function openTAIFEditModal(filteredIdx) {
+  var r = _taifFilteredList[filteredIdx];
+  if (!r) return;
+  _taifEditIdx = state.taifData.findIndex(function(d) {
+    return d.dealerName === r.dealerName && d.city === r.city && d.dealerCode === r.dealerCode;
+  });
+  document.getElementById("taifEditModalTitle").textContent = "Edit — " + r.dealerName;
+  ["dealerName","state","city","principalName","dealerCode","loiIssueDate","codeCreationDate","lastAvgTO"].forEach(function(f) {
+    var el = document.getElementById("taif_" + f);
+    if (el) el.value = r[f]||"";
+  });
+  document.getElementById("taif_dealerStatus").value = r.dealerStatus||"Active";
+  populateTAIFDropdown("taif_hfcl", r.hfcl||"");
+  populateTAIFDropdown("taif_ecofy", r.ecofy||"");
+  populateTAIFDropdown("taif_sriram", r.sriram||"");
+  document.getElementById("taifEditModalOverlay").classList.add("show");
+}
+
+function closeTAIFEditModal() {
+  document.getElementById("taifEditModalOverlay").classList.remove("show");
+  _taifEditIdx = null;
+}
+
+function saveTAIFEdit() {
+  if (_taifEditIdx === null) return;
+  ["dealerName","state","city","principalName","dealerCode","dealerStatus","loiIssueDate","codeCreationDate","lastAvgTO"].forEach(function(f) {
+    var el = document.getElementById("taif_" + f);
+    if (el) state.taifData[_taifEditIdx][f] = el.value.trim();
+  });
+  ["hfcl","ecofy","sriram"].forEach(function(f) {
+    var el = document.getElementById("taif_" + f);
+    if (el) state.taifData[_taifEditIdx][f] = el.value;
+  });
+  setSaveStatus('saving');
+  API.post('/api/taif', state.taifData[_taifEditIdx])
+    .then(function() { setSaveStatus('saved'); })
+    .catch(function() { setSaveStatus('error'); });
+  closeTAIFEditModal();
+  renderTAIF();
+  toast("Record updated.");
+}
+
+function confirmDeleteTAIF(filteredIdx) {
+  var r = _taifFilteredList[filteredIdx];
+  if (!r) return;
+  document.getElementById("confirmTAIFName").textContent = r.dealerName + (r.city ? " (" + r.city + ")" : "");
+  document.getElementById("confirmTAIFBtn").onclick = function() {
+    var realIdx = state.taifData.findIndex(function(d) {
+      return d.dealerName === r.dealerName && d.city === r.city && d.dealerCode === r.dealerCode;
+    });
+    if (realIdx > -1) {
+      state.taifData.splice(realIdx, 1);
+      setSaveStatus('saving');
+      API.delete('/api/taif?dealerCode=' + encodeURIComponent(r.dealerCode) + '&city=' + encodeURIComponent(r.city))
+        .then(function() { setSaveStatus('saved'); })
+        .catch(function() { setSaveStatus('error'); });
+    }
+    closeConfirmTAIF();
+    renderTAIF();
+    toast("Record deleted.");
+  };
+  document.getElementById("confirmTAIFOverlay").classList.add("show");
+}
+
+function closeConfirmTAIF() {
+  document.getElementById("confirmTAIFOverlay").classList.remove("show");
 }
 
 function exportTAIF() {
@@ -3869,6 +4014,8 @@ document.getElementById("dealerMasterModalOverlay").addEventListener("click", e 
 document.getElementById("confirmDealerMasterOverlay").addEventListener("click", e => { if (e.target===e.currentTarget) closeConfirmDealerMasterModal(); });
 document.getElementById("fiPolicyModalOverlay").addEventListener("click", function(e) { if (e.target===e.currentTarget) closeFIPolicyModal(); });
 document.getElementById("healthModalOverlay").addEventListener("click", e => { if (e.target===e.currentTarget) closeHealthModal(); });
+document.getElementById("taifEditModalOverlay").addEventListener("click", e => { if (e.target===e.currentTarget) closeTAIFEditModal(); });
+document.getElementById("confirmTAIFOverlay").addEventListener("click", e => { if (e.target===e.currentTarget) closeConfirmTAIF(); });
 document.addEventListener("click", e => {
   const wrap = document.getElementById("dealerPickerWrap");
   if (wrap && !wrap.contains(e.target)) document.getElementById("dealerPickerDropdown").classList.remove("open");
