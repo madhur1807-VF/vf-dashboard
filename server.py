@@ -87,6 +87,8 @@ def api_save_onboarding(d):     upsert_row(ws("FI_Onboarding"),  {"dealer": d["d
 def api_delete_onboarding(d, l, f): delete_row(ws("FI_Onboarding"), {"dealer": d, "location": l, "financier": f})
 def api_save_fi_policy(d):      upsert_row(ws("FI_Policy"),      {"financier": d["financier"], "productKey": d["productKey"]}, d)
 def api_save_dealer_health(d):  upsert_row(ws("Dealer_Health"),  {"dealer": d["dealer"], "location": d["location"]}, d)
+def api_get_taif():             return rows_to_dicts(ws("TA_IF_Status")) or []
+def api_save_taif(d):           upsert_row(ws("TA_IF_Status"), {"dealerCode": d["dealerCode"], "city": d["city"]}, d)
 
 # ── HTTP HANDLER ──────────────────────────────────────────────
 class Handler(SimpleHTTPRequestHandler):
@@ -129,6 +131,7 @@ class Handler(SimpleHTTPRequestHandler):
                 elif path == "/api/onboarding":     self.send_json(200, api_get("FI_Onboarding"))
                 elif path == "/api/fi_policy":      self.send_json(200, api_get("FI_Policy"))
                 elif path == "/api/dealer_health":  self.send_json(200, api_get("Dealer_Health"))
+                elif path == "/api/taif":             self.send_json(200, api_get_taif())
                 else:                               self.send_json(404, {"error": f"Unknown: {path}"})
             except Exception as e:
                 traceback.print_exc()
@@ -149,6 +152,7 @@ class Handler(SimpleHTTPRequestHandler):
             elif path == "/api/onboarding":    api_save_onboarding(body)
             elif path == "/api/fi_policy":     api_save_fi_policy(body)
             elif path == "/api/dealer_health": api_save_dealer_health(body)
+            elif path == "/api/taif":             api_save_taif(body)
             else: self.send_json(404, {"error": f"Unknown: {path}"}); return
             self.send_json(200, {"ok": True})
         except Exception as e:

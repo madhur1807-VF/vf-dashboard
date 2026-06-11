@@ -1218,13 +1218,29 @@
 <div class="container">
   <div class="page-header">
     <div class="page-title">TA/IF Status (Dealer Level)</div>
-    <div class="page-sub">Track TA and IF status per dealer per financier. Content to be defined.</div>
+    <div class="page-sub">Track TA and IF status per dealer per financier — HFCL, Ecofy, Sriram.</div>
   </div>
-  <div style="display:flex;align-items:center;justify-content:center;padding:80px 20px;color:var(--text-hint);flex-direction:column;gap:12px;">
-    <div style="font-size:48px;">🚧</div>
-    <div style="font-size:16px;font-weight:600;color:var(--text-muted);">Coming Soon</div>
-    <div style="font-size:13px;">This dashboard is under construction. Content will be defined shortly.</div>
+  <div class="summary-bar" id="taifSummary"></div>
+  <!-- Filter bar -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);">
+    <input type="text" class="search-box" id="taifSearch" placeholder="Search dealer / state / city..." oninput="renderTAIF()" style="width:200px;">
+    <select class="filter-select" id="taifFilterState" onchange="renderTAIF()"><option value="">All States</option></select>
+    <select class="filter-select" id="taifFilterStatus" onchange="renderTAIF()"><option value="">All Statuses</option></select>
+    <select class="filter-select" id="taifFilterFI" onchange="renderTAIF()">
+      <option value="">All Financiers</option>
+      <option value="hfcl">HFCL</option>
+      <option value="ecofy">Ecofy</option>
+      <option value="sriram">Sriram</option>
+    </select>
+    <select class="filter-select" id="taifFilterDealerStatus" onchange="renderTAIF()">
+      <option value="">All Dealer Statuses</option>
+      <option value="Active">Active</option>
+      <option value="Inactive">Inactive</option>
+    </select>
+    <button class="btn btn-secondary btn-sm" onclick="clearTAIFFilters()">✕ Clear</button>
+    <button class="btn btn-secondary btn-sm" onclick="exportTAIF()">⬇ Export Excel</button>
   </div>
+  <div id="taifTable"></div>
 </div>
 </div>
 
@@ -1435,7 +1451,7 @@ const PRODUCTS = [
 const CATS = ["A","B","C","D"];
 const CAT_COLORS = { A:'var(--cat-a)', B:'var(--cat-b)', C:'var(--cat-c)', D:'var(--cat-d)' };
 
-let state = { dealers: [], financiers: [], financiersMeta: [], mapping: {}, addedDealers: [], dealersMaster: [], fiPolicy: {}, dealerHealth: {} };
+let state = { dealers: [], financiers: [], financiersMeta: [], mapping: {}, addedDealers: [], dealersMaster: [], fiPolicy: {}, dealerHealth: {}, taifData: [] };
 let modalContext = null;
 let openDealerCards = new Set();
 let openGapCards = new Set();
@@ -1471,18 +1487,20 @@ async function loadState() {
   if (loader) loader.style.display = 'flex';
   setSaveStatus('saving');
   try {
-    const [fiMaster, dealerMaster, addedDealers, onboarding, fiPolicy, dealerHealth] = await Promise.all([
+    const [fiMaster, dealerMaster, addedDealers, onboarding, fiPolicy, dealerHealth, taif] = await Promise.all([
       API.get('/api/fi_master'),
       API.get('/api/dealer_master'),
       API.get('/api/added_dealers'),
       API.get('/api/onboarding'),
       API.get('/api/fi_policy'),
-      API.get('/api/dealer_health')
+      API.get('/api/dealer_health'),
+      API.get('/api/taif')
     ]);
 
     // Ensure all responses are arrays
     const toArr = v => Array.isArray(v) ? v : [];
     const fiM   = toArr(fiMaster);
+    state.taifData = toArr(taif);
     const dmM   = toArr(dealerMaster);
     const adM   = toArr(addedDealers);
     const onbM  = toArr(onboarding);
@@ -1680,6 +1698,8 @@ function switchPage(page) {
   if (page === 'coverage') { renderSummary(); renderGap(); }
   if (page === 'financier') { renderFinancierMaster(); }
   if (page === 'dealermaster') { renderDealerMaster(); }
+  if (page === 'taif') { renderTAIF(); }
+  if (page === 'fipolicy') { renderFIPolicy(); }
   if (page === 'fipolicy') { renderFIPolicy(); }
 }
 
@@ -3685,6 +3705,153 @@ function exportFIPolicy() {
     });
   });
   xlsxDownload(rows, "FI Policy", "Euler_FI_Policy.xlsx");
+}
+
+// ══════════════════════════════════════════════════════════════
+// PAGE 6 — TA/IF STATUS
+// ══════════════════════════════════════════════════════════════
+
+const TAIF_STATUS_COLORS = {
+  'Disburment':               'background:#022c22;color:#4ade80;border-color:#065f46',
+  'Documentation stage':      'background:#1c1a00;color:#facc15;border-color:#854d0e',
+  'SL received':              'background:#0c1a2e;color:#60a5fa;border-color:#1e40af',
+  'Eligible but Not applied': 'background:#1a0e2e;color:#c084fc;border-color:#6b21a8',
+  'Disccusion Initiated':     'background:#1a0e2e;color:#c084fc;border-color:#6b21a8',
+  'SL Rejected':              'background:#1c0505;color:#f87171;border-color:#7f1d1d',
+  'Not Eligible':             'background:#1c0505;color:#f87171;border-color:#7f1d1d',
+
+  'NA':                       'background:var(--surface2);color:var(--text-hint);border-color:var(--border)',
+  '':                         'background:var(--surface2);color:var(--text-hint);border-color:var(--border)',
+};
+
+function taifBadge(v) {
+  var style = TAIF_STATUS_COLORS[v] || TAIF_STATUS_COLORS[''];
+  return '<span class="badge" style="font-size:10px;' + style + '">' + escHtml(v||'—') + '</span>';
+}
+
+function clearTAIFFilters() {
+  document.getElementById("taifSearch").value = "";
+  document.getElementById("taifFilterState").value = "";
+  document.getElementById("taifFilterStatus").value = "";
+  document.getElementById("taifFilterFI").value = "";
+  document.getElementById("taifFilterDealerStatus").value = "";
+  renderTAIF();
+}
+
+function renderTAIF() {
+  // Migrate legacy status values
+  var list = (state.taifData || []).map(function(r) {
+    var migrated = Object.assign({}, r);
+    ['hfcl','ecofy','sriram'].forEach(function(fi) {
+      if (migrated[fi] === 'Not Listed In Eligible Pool') migrated[fi] = 'Not Eligible';
+      if (migrated[fi] === 'Dearler is not Intrested')    migrated[fi] = 'Eligible but Not applied';
+    });
+    return migrated;
+  });
+
+  // Populate state filter
+  var stateSel = document.getElementById("taifFilterState");
+  if (stateSel && stateSel.options.length === 1) {
+    var states = [...new Set(list.map(r => r.state).filter(Boolean))].sort();
+    states.forEach(function(s) { var o = document.createElement("option"); o.value = s; o.textContent = s; stateSel.appendChild(o); });
+  }
+  // Populate status filter
+  var statusSel = document.getElementById("taifFilterStatus");
+  if (statusSel && statusSel.options.length === 1) {
+    var allVals = new Set();
+    list.forEach(function(r) { ['hfcl','ecofy','sriram'].forEach(function(fi) { if (r[fi]) allVals.add(r[fi]); }); });
+    [...allVals].sort().forEach(function(s) { var o = document.createElement("option"); o.value = s; o.textContent = s; statusSel.appendChild(o); });
+  }
+
+  var search  = (document.getElementById("taifSearch").value || "").toLowerCase();
+  var fState  = document.getElementById("taifFilterState").value;
+  var fStatus = document.getElementById("taifFilterStatus").value;
+  var fFI     = document.getElementById("taifFilterFI").value;
+  var fDStatus= document.getElementById("taifFilterDealerStatus").value;
+
+  var filtered = list.filter(function(r) {
+    if (search && !(r.dealerName||"").toLowerCase().includes(search) &&
+        !(r.state||"").toLowerCase().includes(search) &&
+        !(r.city||"").toLowerCase().includes(search)) return false;
+    if (fState  && r.state !== fState) return false;
+    if (fDStatus && r.dealerStatus !== fDStatus) return false;
+    if (fStatus) {
+      if (fFI) { if (r[fFI] !== fStatus) return false; }
+      else { if (r.hfcl !== fStatus && r.ecofy !== fStatus && r.sriram !== fStatus) return false; }
+    } else if (fFI) {
+      if (!r[fFI]) return false;
+    }
+    return true;
+  });
+
+  // Summary
+  var total = list.length;
+  var disbursed = list.filter(function(r) { return r.hfcl==='Disburment'||r.ecofy==='Disburment'||r.sriram==='Disburment'; }).length;
+  var docStage = list.filter(function(r) { return r.hfcl==='Documentation stage'||r.ecofy==='Documentation stage'||r.sriram==='Documentation stage'; }).length;
+  document.getElementById("taifSummary").innerHTML =
+    '<div class="sum-card"><div class="sum-label">Total Dealers</div><div class="sum-value">' + total + '</div><div class="sum-sub">in TA/IF tracker</div></div>' +
+    '<div class="sum-card"><div class="sum-label">Disbursed</div><div class="sum-value sum-ok">' + disbursed + '</div><div class="sum-sub">at least 1 FI</div></div>' +
+    '<div class="sum-card"><div class="sum-label">Documentation Stage</div><div class="sum-value" style="color:var(--cat-c);">' + docStage + '</div><div class="sum-sub">at least 1 FI</div></div>';
+
+  if (!filtered.length) {
+    document.getElementById("taifTable").innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div>No records match your filters.</div></div>';
+    return;
+  }
+
+  var rows = filtered.map(function(r, idx) {
+    return '<tr>' +
+      '<td style="font-size:11px;color:var(--text-muted);text-align:center;">' + (idx+1) + '</td>' +
+      '<td style="font-weight:600;font-size:12px;min-width:160px;">' + escHtml(r.dealerName||'—') + '</td>' +
+      '<td style="font-size:12px;">' + escHtml(r.state||'—') + '</td>' +
+      '<td style="font-size:12px;">' + escHtml(r.city||'—') + '</td>' +
+      '<td style="font-size:12px;">' + escHtml(r.principalName||'—') + '</td>' +
+      '<td style="font-size:11px;font-family:DM Mono,monospace;">' + escHtml(r.dealerCode||'—') + '</td>' +
+      '<td><span class="badge" style="' + (r.dealerStatus==='Active'?'background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-border)':'background:var(--surface2);color:var(--text-hint);border:1px solid var(--border)') + '">' + escHtml(r.dealerStatus||'—') + '</span></td>' +
+      '<td style="font-size:11px;color:var(--text-muted);">' + escHtml(r.loiIssueDate||'—') + '</td>' +
+      '<td style="font-size:11px;color:var(--text-muted);">' + escHtml(r.codeCreationDate||'—') + '</td>' +
+      '<td style="font-size:11px;">' + escHtml(r.lastAvgTO||'—') + '</td>' +
+      '<td>' + taifBadge(r.hfcl) + '</td>' +
+      '<td>' + taifBadge(r.ecofy) + '</td>' +
+      '<td>' + taifBadge(r.sriram) + '</td>' +
+      '<td style="font-size:11px;color:var(--text-muted);max-width:180px;">' + escHtml(r.remarks||'') + '</td>' +
+    '</tr>';
+  }).join('');
+
+  document.getElementById("taifTable").innerHTML =
+    '<div style="overflow-x:auto;">' +
+    '<table class="dealer-table" style="min-width:1400px;">' +
+    '<thead><tr>' +
+    '<th style="width:40px;text-align:center;">S.No</th>' +
+    '<th style="min-width:160px;">Dealer Name</th>' +
+    '<th>State</th><th>City</th><th>Principal</th>' +
+    '<th>Dealer Code</th><th>Status</th>' +
+    '<th>LOI Date</th><th>Code Creation</th><th>Avg TO</th>' +
+    '<th style="min-width:140px;">HFCL</th>' +
+    '<th style="min-width:140px;">Ecofy</th>' +
+    '<th style="min-width:140px;">Sriram</th>' +
+    '<th style="min-width:160px;">Remarks</th>' +
+    '</tr></thead>' +
+    '<tbody>' + rows + '</tbody>' +
+    '</table></div>';
+}
+
+function exportTAIF() {
+  var list = (state.taifData || []).map(function(r) {
+    var m = Object.assign({}, r);
+    ['hfcl','ecofy','sriram'].forEach(function(fi) {
+      if (m[fi] === 'Not Listed In Eligible Pool') m[fi] = 'Not Eligible';
+      if (m[fi] === 'Dearler is not Intrested')    m[fi] = 'Eligible but Not applied';
+    });
+    return m;
+  });
+  var headers = ["S.No","Dealer Name","State","City","Principal","Phone","Dealer Code",
+    "Status","LOI Issue Date","Code Creation Date","Last Avg TO","HFCL","Ecofy","Sriram","Remarks"];
+  var rows = [headers, ...list.map(function(r,i) {
+    return [i+1, r.dealerName||"", r.state||"", r.city||"", r.principalName||"",
+      r.phone||"", r.dealerCode||"", r.dealerStatus||"", r.loiIssueDate||"",
+      r.codeCreationDate||"", r.lastAvgTO||"", r.hfcl||"", r.ecofy||"", r.sriram||"", r.remarks||""];
+  })];
+  xlsxDownload(rows, "TA_IF Status", "Euler_TAIF_Status.xlsx");
 }
 
 // ══════════════════════════════════════════════════════════════
