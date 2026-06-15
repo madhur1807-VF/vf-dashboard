@@ -83,7 +83,9 @@ def ws(title):
 
 def rows_to_dicts(worksheet):
     try:
-        return worksheet.get_all_records(default_blank="") or []
+        # Pass expected_headers to handle any remaining duplicate columns gracefully
+        headers = worksheet.row_values(1)
+        return worksheet.get_all_records(expected_headers=headers, default_blank="") or []
     except Exception as e:
         print(f"  ⚠ rows_to_dicts error ({worksheet.title}): {e} — falling back to manual parse")
         try:
@@ -91,10 +93,23 @@ def rows_to_dicts(worksheet):
             if not all_vals: return []
             headers = all_vals[0]
             result = []
+            seen_headers = {}
+            deduped = []
+            for h in headers:
+                if h in seen_headers:
+                    deduped.append(h + '_dup_' + str(seen_headers[h]))
+                    seen_headers[h] += 1
+                else:
+                    seen_headers[h] = 1
+                    deduped.append(h)
             for row in all_vals[1:]:
                 if not any(row): continue
-                padded = row + [''] * (len(headers) - len(row))
-                result.append(dict(zip(headers, padded)))
+                padded = row + [''] * (len(deduped) - len(row))
+                d = {}
+                for i, h in enumerate(deduped):
+                    if '_dup_' not in h:
+                        d[h] = padded[i]
+                result.append(d)
             return result
         except Exception as e2:
             print(f"  ❌ rows_to_dicts fallback error ({worksheet.title}): {e2}")

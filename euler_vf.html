@@ -1079,7 +1079,6 @@
         <option value="">— Select —</option>
         <option value="ESP">ESP</option>
         <option value="ORP">ORP</option>
-        <option value="Either">Either</option>
       </select>
     </div>
             <div class="form-group" style="margin:0;">
@@ -1097,10 +1096,11 @@
       <div id="fip_ind_maxLoan_view" class="fip-view-field">—</div>
       <!-- Shown based on loanAmtType selection -->
       <div id="fip_ind_maxLoan_edit_wrap" style="display:none;">
-        <div id="fip_ind_maxLoanPct_row" style="display:none;margin-bottom:6px;position:relative;">
-          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">%</span>
-          <input type="number" class="form-select" id="fip_ind_maxLoanPct" placeholder="e.g. 85" style="padding-left:28px;" min="0" max="100" step="0.1">
-          <span style="font-size:10px;color:var(--text-hint);margin-left:4px;">% of vehicle cost</span>
+        <div id="fip_ind_maxLoanPct_row" style="display:none;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="number" class="form-select" id="fip_ind_maxLoanPct" placeholder="e.g. 85" style="flex:1;" min="0" max="100" step="0.1">
+            <span style="font-size:13px;color:var(--text-muted);white-space:nowrap;">% of vehicle cost</span>
+          </div>
         </div>
         <div id="fip_ind_maxLoanAbs_row" style="display:none;position:relative;">
           <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">₹</span>
@@ -1259,7 +1259,6 @@
         <option value="">— Select —</option>
         <option value="ESP">ESP</option>
         <option value="ORP">ORP</option>
-        <option value="Either">Either</option>
       </select>
     </div>
             <div class="form-group" style="margin:0;">
@@ -1277,10 +1276,11 @@
       <div id="fip_co_maxLoan_view" class="fip-view-field">—</div>
       <!-- Shown based on loanAmtType selection -->
       <div id="fip_co_maxLoan_edit_wrap" style="display:none;">
-        <div id="fip_co_maxLoanPct_row" style="display:none;margin-bottom:6px;position:relative;">
-          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">%</span>
-          <input type="number" class="form-select" id="fip_co_maxLoanPct" placeholder="e.g. 85" style="padding-left:28px;" min="0" max="100" step="0.1">
-          <span style="font-size:10px;color:var(--text-hint);margin-left:4px;">% of vehicle cost</span>
+        <div id="fip_co_maxLoanPct_row" style="display:none;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="number" class="form-select" id="fip_co_maxLoanPct" placeholder="e.g. 85" style="flex:1;" min="0" max="100" step="0.1">
+            <span style="font-size:13px;color:var(--text-muted);white-space:nowrap;">% of vehicle cost</span>
+          </div>
         </div>
         <div id="fip_co_maxLoanAbs_row" style="display:none;position:relative;">
           <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">₹</span>
@@ -1308,7 +1308,7 @@
           <div style="margin-bottom:12px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
               <label class="form-label" style="margin:0;">Turnover & Fleet Criteria <span style="color:var(--flag);">*</span>
-                <span style="font-weight:400;font-size:10px;color:var(--text-hint);margin-left:4px;">(Avg L2 years · NA = no requirement)</span>
+                <span style="font-weight:400;font-size:10px;color:var(--text-hint);margin-left:4px;">(Avg L2 years · Turnover in ₹ Lacs · NA = no requirement)</span>
               </label>
               <button class="btn btn-secondary btn-sm" id="fip_co_addTierBtn" onclick="addFIPTier()" style="display:none;font-size:11px;">+ Add Tier</button>
             </div>
@@ -1330,16 +1330,7 @@
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-            <div class="form-group" style="margin:0;">
-      <label class="form-label">Provides Loan to NTC <span style="color:var(--flag);">*</span></label>
-      <div id="fip_co_ntc_view" class="fip-view-field" style="display:none;">No</div>
-      <div id="fip_co_ntc_wrap" style="display:flex;align-items:center;gap:10px;padding:6px 0;">
-        <div id="fip_co_ntc_label" style="font-size:12px;font-weight:600;color:var(--cat-d);">No</div>
-        <div id="fip_co_ntc_track" onclick="toggleFIPYN('fip_co_ntc')" style="width:36px;height:20px;border-radius:10px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
-          <div id="fip_co_ntc_thumb" style="width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
-        </div>
-      </div>
-    </div>
+
             <div class="form-group" style="margin:0;">
       <label class="form-label">ITR Filed <span style="color:var(--flag);">*</span></label>
       <div id="fip_co_itr_view" class="fip-view-field" style="display:none;">No</div>
@@ -1860,7 +1851,7 @@ async function loadState() {
       if (!state.fiPolicy[row.financier]) state.fiPolicy[row.financier] = {};
       const pol = { ind_applicable: row.ind_applicable === 'true', co_applicable: row.co_applicable === 'true', ind: {}, co: {} };
       ['minCibil','maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','flexibility','remarks'].forEach(k => { pol.ind[k] = row['ind_'+k]||''; });
-      ['maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','vintage','ntc','itr','flexibility','remarks'].forEach(k => { pol.co[k] = row['co_'+k]||''; });
+      ['maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','vintage','itr','flexibility','remarks'].forEach(k => { pol.co[k] = row['co_'+k]||''; });
         // Load tiered criteria
         try { pol.co.tiers = row['co_tiers'] ? JSON.parse(row['co_tiers']) : []; } catch(e) { pol.co.tiers = []; }
       state.fiPolicy[row.financier][row.productKey] = pol;
@@ -1927,7 +1918,7 @@ async function saveFIPolicyToSheet(fiName, productKey) {
   const row = { financier: fiName, productKey,
     ind_applicable: String(!!pol.ind_applicable), co_applicable: String(!!pol.co_applicable) };
   ['minCibil','maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','flexibility','remarks'].forEach(k => { row['ind_'+k] = (pol.ind||{})[k]||''; });
-  ['maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','vintage','ntc','itr','flexibility','remarks'].forEach(k => { row['co_'+k] = (pol.co||{})[k]||''; });
+  ['maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','vintage','itr','flexibility','remarks'].forEach(k => { row['co_'+k] = (pol.co||{})[k]||''; });
   // Save tiers as JSON string
   row['co_tiers'] = JSON.stringify((pol.co||{}).tiers||[]);
   setSaveStatus('saving');
@@ -3097,11 +3088,11 @@ const FIP_SEGMENTS = ['ind', 'co'];
 // Field keys for each segment — used for save/load/clear
 const FIP_SEG_FIELDS = {
   ind: ['minCibil','maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','flexibility','remarks'],
-  co:  ['maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','vintage','ntc','itr','flexibility','remarks']
+  co:  ['maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','vintage','itr','flexibility','remarks']
 };
 
 // Fields that are toggle yes/no (stored as 'Yes'/'No')
-const FIP_TOGGLE_FIELDS = { ind: ['ntc','ftu','ftb'], co: ['ntc','itr'] };
+const FIP_TOGGLE_FIELDS = { ind: ['ntc','ftu','ftb'], co: ['itr'] };
 
 // INR display fields
 const FIP_INR_FIELDS = { ind: ['maxLoan'], co: ['maxLoan'] }; // maxLoanPct handled separately
@@ -4191,7 +4182,7 @@ function exportFIPolicy() {
     "Ind Residence","Ind Guarantor","Ind Bank Statement",
     "Ind License Type","Ind NTC","Ind FTU","Ind FTB","Ind Flexibility","Ind Remarks",
     "CO Applicable","CO Max Tenure","CO Loan On","CO Loan Amt Type","CO Max Loan (₹)","CO Max Loan (%)","CO Min IRR",
-    "CO Vintage","CO NTC","CO ITR Filed","CO Flexibility","CO Turnover/Fleet Tiers","CO Remarks"];
+    "CO Vintage","CO ITR Filed","CO Flexibility","CO Turnover/Fleet Tiers","CO Remarks"];
   const rows = [headers];
   state.financiers.forEach(fi => {
     PRODUCTS.forEach(p => {
@@ -4205,7 +4196,7 @@ function exportFIPolicy() {
         i.bankStatement||"", i.licenseType||"", i.ntc||"", i.ftu||"", i.ftb||"", i.flexibility||"", i.remarks||"",
         pol.co_applicable?"Yes":"No",
         c.maxTenure||"", c.loanOn||"", c.loanAmtType||"", c.maxLoan||"", c.maxLoanPct||"", c.minIrr||"",
-        c.vintage||"", c.ntc||"", c.itr||"", c.flexibility||"", JSON.stringify((c.tiers||[])), c.remarks||""
+        c.vintage||"", c.itr||"", c.flexibility||"", JSON.stringify((c.tiers||[])), c.remarks||""
       ]);
     });
   });
@@ -4628,7 +4619,7 @@ function getGeoFieldDefs(seg) {
   return seg === 'ind' ? [
     { key:'minCibil',     label:'Min CIBIL',            type:'number' },
     { key:'maxTenure',    label:'Max Tenure (months)',  type:'number' },
-    { key:'loanOn',       label:'Loan On',              type:'select', opts:['ESP','ORP','Either'] },
+    { key:'loanOn',       label:'Loan On',              type:'select', opts:['ESP','ORP'] },
     { key:'loanAmtType',  label:'Max Loan Amount Type', type:'select', opts:['Percentage','Absolute','Both'] },
     { key:'maxLoanPct',   label:'Max Loan (%)',         type:'number' },
     { key:'maxLoan',      label:'Max Loan (₹)',         type:'number' },
@@ -4644,7 +4635,7 @@ function getGeoFieldDefs(seg) {
     { key:'remarks',      label:'Remarks',              type:'textarea' },
   ] : [
     { key:'maxTenure',   label:'Max Tenure (months)',   type:'number' },
-    { key:'loanOn',      label:'Loan On',               type:'select', opts:['ESP','ORP','Either'] },
+    { key:'loanOn',      label:'Loan On',               type:'select', opts:['ESP','ORP'] },
     { key:'loanAmtType', label:'Max Loan Amount Type',  type:'select', opts:['Percentage','Absolute','Both'] },
     { key:'maxLoanPct',  label:'Max Loan (%)',          type:'number' },
     { key:'maxLoan',     label:'Max Loan (₹)',          type:'number' },
