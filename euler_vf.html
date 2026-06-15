@@ -1686,8 +1686,9 @@ async function loadState() {
     state.mapping = {};
     onbM.forEach(row => {
       if (!row.dealer || !row.financier) return;
-      if (!state.mapping[row.dealer]) state.mapping[row.dealer] = {};
-      state.mapping[row.dealer][row.financier] = {
+      var dk = dealerKey(row.dealer, row.location||'');
+      if (!state.mapping[dk]) state.mapping[dk] = {};
+      state.mapping[dk][row.financier] = {
         products: {
           '3wc':       { enabled: row['3wc_enabled']       === 'true', category: row['3wc_category']       || null },
           '3wp':       { enabled: row['3wp_enabled']       === 'true', category: row['3wp_category']       || null },
@@ -1714,12 +1715,12 @@ async function loadState() {
     state.dealerHealth = {};
     dhM.forEach(row => {
       if (!row.dealer) return;
-      state.dealerHealth[row.dealer] = {
+      var dhk = dealerKey(row.dealer, row.location||'');
+      state.dealerHealth[dhk] = {
         '3wc': row['3wc']||'', '3wp': row['3wp']||'',
         '4wc_storm': row['4wc_storm']||'', '4wc_turbo': row['4wc_turbo']||''
       };
     });
-
     setSaveStatus('saved');
     if (loader) { loader.classList.add('hide'); setTimeout(() => { loader.style.display = 'none'; }, 350); }
   } catch(e) {
@@ -1744,7 +1745,7 @@ async function deleteAddedDealer(dealer, location) {
 }
 
 async function saveOnboarding(dealer, location, financier) {
-  const fins = getDealerFinanciers(dealer);
+  const fins = getDealerFinanciers(dealer, location||'');
   const fdata = fins[financier];
   if (!fdata) return;
   const row = { dealer, location, financier,
@@ -1808,7 +1809,12 @@ async function deleteDealerMasterFromSheet(dealerName, location) {
 // Legacy saveState — no-op (all saves are now granular above)
 
 // ── HELPERS ──────────────────────────────────────────────────
-function getDealerFinanciers(d) { return state.mapping[d] || {}; }
+function dealerKey(name, location) { return name + '||' + (location||''); }
+function getDealerFinanciers(d, location) {
+  // Accept dealer object or name+location
+  if (typeof d === 'object') return state.mapping[dealerKey(d.dealer, d.location)] || {};
+  return state.mapping[dealerKey(d, location)] || {};
+}
 function getInitials(n) { return n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2); }
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escJs(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
@@ -1853,7 +1859,7 @@ function computeStats() {
   let totalLinks = 0, dealersCovered = 0, catCounts = {A:0,B:0,C:0,D:0};
   let noFinanciers = [], lessThan3 = [];
   state.addedDealers.forEach(d => {
-    const fins = getDealerFinanciers(d.dealer);
+    const fins = getDealerFinanciers(d.dealer, d.location);
     const count = Object.keys(fins).length;
     if (count > 0) dealersCovered++;
     Object.values(fins).forEach(fdata => {
@@ -1899,7 +1905,7 @@ function showDealerList(type) {
   const rows = dealers.length === 0
     ? `<div style="padding:20px;text-align:center;color:var(--text-hint);font-size:13px;">${isNone?'All dealers have at least one financier.':'All dealers have 3+ financiers.'}</div>`
     : dealers.map(d => {
-        const count = Object.keys(getDealerFinanciers(d.dealer)).length;
+        const count = Object.keys(getDealerFinanciers(d.dealer, d.location)).length;
         return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
           <div style="width:32px;height:32px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;color:var(--text-muted);">${getInitials(d.dealer)}</div>
           <div style="flex:1;"><div style="font-weight:600;font-size:13px;">${escHtml(d.dealer)}</div><div style="font-size:11px;color:var(--text-muted);">${escHtml(d.location)}</div></div>
@@ -1945,9 +1951,10 @@ function addDealer(dealerName, location) {
   const masterObj = getDealerMasterList().find(d => d.dealerName===dealerName && d.location===location);
   const newDealer = { dealer: dealerName, location, rm: masterObj ? (masterObj.rmSales||"") : "", vfPoc: masterObj ? (masterObj.vfPoc||"") : "" };
   state.addedDealers.push(newDealer);
-  if (!state.dealerHealth[dealerName]) {
-    state.dealerHealth[dealerName] = {};
-    PRODUCTS.forEach(function(p){ state.dealerHealth[dealerName][p.key] = 'na'; });
+  const dhkNew = dealerKey(dealerName, location);
+  if (!state.dealerHealth[dhkNew]) {
+    state.dealerHealth[dhkNew] = {};
+    PRODUCTS.forEach(function(p){ state.dealerHealth[dhkNew][p.key] = 'na'; });
   }
   document.getElementById("dealerPickerDropdown").classList.remove("open");
   saveAddedDealer(newDealer);
@@ -1960,8 +1967,10 @@ function removeAddedDealer(dealerName, location) {
   document.getElementById("confirmDealerName").textContent = dealerName + " (" + location + ")";
   document.getElementById("confirmDeleteBtn").onclick = () => {
     state.addedDealers = state.addedDealers.filter(d => !(d.dealer===dealerName && d.location===location));
-    if (state.mapping[dealerName]) delete state.mapping[dealerName];
-    openDealerCards.delete(dealerName);
+    const dObj4 = state.addedDealers.find(d => d.dealer===dealerName && d.location===location) || {};
+    const dk4 = dealerKey(dealerName, dObj4.location||location||'');
+    if (state.mapping[dk4]) delete state.mapping[dk4];
+    openDealerCards.delete(dealerKey(dealerName, location||''));
     closeConfirmModal();
     deleteAddedDealer(dealerName, location);
     renderAll();
@@ -1993,15 +2002,15 @@ function renderDealers() {
   }
   let dealers = state.addedDealers.filter(d => {
     if (search && !d.dealer.toLowerCase().includes(search) && !(d.location||"").toLowerCase().includes(search) && !(d.rm||"").toLowerCase().includes(search)) return false;
-    if (finF && !getDealerFinanciers(d.dealer)[finF]) return false;
+    if (finF && !getDealerFinanciers(d.dealer, d.location)[finF]) return false;
     if (healthF) {
-      const oh = computeOverallHealth(d.dealer);
+      const oh = computeOverallHealth(d.dealer, d.location||'');
       if (healthF === 'none' && oh !== null) return false;
       if (healthF !== 'none' && oh !== healthF) return false;
     }
     if (productHealthF) {
       const [prodKey, prodHealth] = productHealthF.split('|');
-      const h = (state.dealerHealth[d.dealer] || {})[prodKey] || 'na';
+      const h = (state.dealerHealth[dealerKey(d.dealer,d.location||'')] || state.dealerHealth[d.dealer] || {})[prodKey] || 'na';
       if (h !== prodHealth) return false;
     }
     return true;
@@ -2009,7 +2018,7 @@ function renderDealers() {
   if (!dealers.length) { grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div>No dealers match your filter.</div></div>'; return; }
   grid.innerHTML = dealers.map(d => renderDealerCard(d)).join("");
   dealers.forEach(d => {
-    if (openDealerCards.has(d.dealer)) {
+    if (openDealerCards.has(dealerKey(d.dealer, d.location||''))) {
       const card = document.querySelector('[data-dealer="'+CSS.escape(d.dealer)+'"]');
       if (card) card.classList.add("open");
     }
@@ -2018,7 +2027,7 @@ function renderDealers() {
 
 
 function renderDealerCard(d) {
-  const fins = getDealerFinanciers(d.dealer);
+  const fins = getDealerFinanciers(d.dealer, d.location);
   const finCount = Object.keys(fins).length;
   // Count financiers enabled per product (regardless of category)
   const productFinCount = {};
@@ -2028,10 +2037,11 @@ function renderDealerCard(d) {
   });
 
   // Health status per product
-  const dealerHealth = (state.dealerHealth && state.dealerHealth[d.dealer]) ? state.dealerHealth[d.dealer] : {};
+  const dhKey = dealerKey(d.dealer, d.location);
+  const dealerHealth = (state.dealerHealth && (state.dealerHealth[dhKey] || state.dealerHealth[d.dealer])) || {};
 
   // Overall health badge for collapsed card header
-  var overallHealth = computeOverallHealth(d.dealer);
+  var overallHealth = computeOverallHealth(d.dealer, d.location);
 
   // Compact single-row insight strip
   const insightStrip = `
@@ -2051,8 +2061,8 @@ function renderDealerCard(d) {
     </div>`;
 
   return `
-    <div class="dealer-card" data-dealer="${escHtml(d.dealer)}">
-      <div class="dealer-header" onclick="toggleDealerCard('${escJs(d.dealer)}')">
+    <div class="dealer-card" data-dealer="${escHtml(dealerKey(d.dealer, d.location||''))}">
+      <div class="dealer-header" onclick="toggleDealerCard('${escJs(d.dealer)}','${escJs(d.location||'')}')">
         <div class="dealer-avatar" style="${overallHealth ? `background:var(--health-${overallHealth}-bg);border-color:var(--health-${overallHealth}-border);color:var(--health-${overallHealth}-text);` : ''}">${getInitials(d.dealer)}</div>
         <div class="dealer-info">
           <div class="dealer-name">${escHtml(d.dealer === 'COCO' ? 'COCO - ' + d.location : d.dealer)}</div>
@@ -2066,14 +2076,14 @@ function renderDealerCard(d) {
       <div class="dealer-body">
         <div class="fin-toolbar">
           <span class="fin-toolbar-label">Financiers Onboarded</span>
-          <button class="btn btn-primary btn-sm" onclick="openAddModal('${escJs(d.dealer)}')">+ Add Financier</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddModal('${escJs(d.dealer)}','${escJs(d.location||'')}')">+ Add Financier</button>
         </div>
-        ${renderFinancierList(d.dealer, fins)}
+        ${renderFinancierList(d.dealer, fins, d.location||'')}
       </div>
     </div>`;
 }
 
-function renderFinancierList(dealerName, fins) {
+function renderFinancierList(dealerName, fins, dealerLocation) {
   const entries = Object.entries(fins);
   if (!entries.length) return `<div class="fin-empty">No financiers onboarded yet. Click "Add Financier" to get started.</div>`;
   return `<div class="fin-list">${entries.map(([finName, fdata]) => {
@@ -2096,8 +2106,8 @@ function renderFinancierList(dealerName, fins) {
           <div class="fin-row-name">${escHtml(finName)}</div>
           <div style="display:flex;gap:5px;flex-wrap:wrap;flex:1;">${summaryChips}</div>
           <div style="display:flex;gap:6px;">
-            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openEditModal('${escJs(dealerName)}','${escJs(finName)}')">Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();removeFinancier('${escJs(dealerName)}','${escJs(finName)}')">Remove</button>
+            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openEditModal('${escJs(dealerName)}','${escJs(finName)}','${escJs(dealerLocation||'')}')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();removeFinancier('${escJs(dealerName)}','${escJs(finName)}','${escJs(dealerLocation||'')}')">Remove</button>
           </div>
           <span class="fin-chevron">▾</span>
         </div>
@@ -2106,11 +2116,12 @@ function renderFinancierList(dealerName, fins) {
   }).join('')}</div>`;
 }
 
-function toggleDealerCard(dealerName) {
-  const card = document.querySelector(`[data-dealer="${CSS.escape(dealerName)}"]`);
+function toggleDealerCard(dealerName, dealerLocation) {
+  const dk = dealerKey(dealerName, dealerLocation||'');
+  const card = document.querySelector('[data-dealer="' + CSS.escape(dk) + '"]');
   if (!card) return;
-  card.classList.toggle("open");
-  if (card.classList.contains("open")) openDealerCards.add(dealerName); else openDealerCards.delete(dealerName);
+  card.classList.toggle('open');
+  if (card.classList.contains('open')) openDealerCards.add(dk); else openDealerCards.delete(dk);
 }
 
 function toggleFinRow(dealerName, finName) {
@@ -2144,29 +2155,47 @@ function toggleProductRow(key) {
   else { row.classList.remove("active"); cats.style.display = "none"; document.querySelectorAll(`input[name="cat_${key}"]`).forEach(r => r.checked = false); }
 }
 
-function openAddModal(dealerName) {
-  const existing = Object.keys(getDealerFinanciers(dealerName));
-  const ACTIVE_STATUSES = ["Active", "Onboarded"];
+function openAddModal(dealerName, dealerLocation) {
+  const dObj = state.addedDealers.find(d => d.dealer === dealerName && (d.location||'') === (dealerLocation||'')) || state.addedDealers.find(d => d.dealer === dealerName) || {};
+  const existing = Object.keys(getDealerFinanciers(dealerName, dObj.location||dealerLocation||''));
+  const SHOW_STATUSES = ["Active", "Onboarded", "Discussion - Active", "Discussion - Initial"];
   const available = state.financiers.filter(f => {
     if (existing.includes(f)) return false;
     const meta = state.financiersMeta.find(m => m.name === f);
     if (!meta) return false;
-    return ACTIVE_STATUSES.includes(meta.status);
+    return SHOW_STATUSES.includes(meta.status);
   }).slice().sort((a, b) => a.localeCompare(b));
-  if (!available.length) { toast("All active/onboarded financiers already added for this dealer."); return; }
-  modalContext = { dealerName, editFinancier: null };
+  if (!available.length) { toast("All eligible financiers already added for this dealer."); return; }
+  modalContext = { dealerName, dealerLocation: dObj.location||dealerLocation||'', editFinancier: null };
   document.getElementById("modalTitle").textContent = "Add Financier";
   document.getElementById("modalSub").textContent = dealerName;
   document.getElementById("finSelectGroup").style.display = "block";
   document.getElementById("modalSaveBtn").textContent = "Add Financier";
-  document.getElementById("finSelect").innerHTML = available.map(f=>`<option value="${escHtml(f)}">${escHtml(f)}</option>`).join('');
+  document.getElementById("finSelect").innerHTML = available.map(f => {
+    const meta = state.financiersMeta.find(m => m.name === f);
+    const status = meta ? meta.status : '';
+    const isDiscussion = status.startsWith('Discussion');
+    return `<option value="${escHtml(f)}" style="${isDiscussion ? 'color:#fbbf24;' : ''}">${escHtml(f)}${isDiscussion ? ' (' + escHtml(status) + ')' : ''}</option>`;
+  }).join('');
+  // Show/hide note about missing FIs
+  const allFIsCount = state.financiers.filter(f => !existing.includes(f)).length;
+  const hiddenCount = allFIsCount - available.length;
+  const noteEl = document.getElementById("finSelectNote");
+  if (noteEl) {
+    if (hiddenCount > 0) {
+      noteEl.textContent = `ℹ ${hiddenCount} FI${hiddenCount!==1?'s':''} not shown — status must be Active, Onboarded, or Discussion to appear here. Update status in FI Master List.`;
+      noteEl.style.display = '';
+    } else {
+      noteEl.style.display = 'none';
+    }
+  }
   document.getElementById("productConfigList").innerHTML = buildProductConfigHTML(null);
   document.getElementById("modalOverlay").classList.add("show");
 }
 
-function openEditModal(dealerName, finName) {
-  const fdata = getDealerFinanciers(dealerName)[finName] || { products: {} };
-  modalContext = { dealerName, editFinancier: finName };
+function openEditModal(dealerName, finName, dealerLocation) {
+  const fdata = getDealerFinanciers(dealerName, dealerLocation||'')[finName] || { products: {} };
+  modalContext = { dealerName, dealerLocation: dealerLocation||'', editFinancier: finName };
   document.getElementById("modalTitle").textContent = "Edit Financier";
   document.getElementById("modalSub").textContent = `${dealerName} — ${finName}`;
   document.getElementById("finSelectGroup").style.display = "none";
@@ -2190,8 +2219,10 @@ function saveFinancier() {
     if (enabled) anyEnabled = true;
   }
   if (!anyEnabled) { toast("Please enable at least one product."); return; }
-  if (!state.mapping[dealerName]) state.mapping[dealerName] = {};
-  state.mapping[dealerName][finName] = { products };
+  const dkLoc = modalContext.dealerLocation || (state.addedDealers.find(d => d.dealer === dealerName && (d.location||'') === (modalContext.dealerLocation||'')) || state.addedDealers.find(d => d.dealer === dealerName) || {}).location || '';
+  const dk = dealerKey(dealerName, dkLoc);
+  if (!state.mapping[dk]) state.mapping[dk] = {};
+  state.mapping[dk][finName] = { products };
   closeModal();
   openDealerCards.add(dealerName);
   const loc = (state.addedDealers.find(d=>d.dealer===dealerName)||{}).location||"";
@@ -2200,11 +2231,12 @@ function saveFinancier() {
   toast(editFinancier ? finName+" updated." : finName+" added to "+dealerName+".");
 }
 
-function removeFinancier(dealerName, finName) {
-  if (!confirm(`Remove ${finName} from ${dealerName}?`)) return;
-  if (state.mapping[dealerName]) {
-    delete state.mapping[dealerName][finName];
-    if (!Object.keys(state.mapping[dealerName]).length) delete state.mapping[dealerName];
+function removeFinancier(dealerName, finName, dealerLocation) {
+  if (!confirm('Remove ' + finName + ' from ' + dealerName + '?')) return;
+  const dk3 = dealerKey(dealerName, dealerLocation || (state.addedDealers.find(d => d.dealer === dealerName && (d.location||'') === (dealerLocation||'')) || state.addedDealers.find(d => d.dealer === dealerName) || {}).location || '');
+  if (state.mapping[dk3]) {
+    delete state.mapping[dk3][finName];
+    if (!Object.keys(state.mapping[dk3]).length) delete state.mapping[dk3];
   }
   openDealerCards.add(dealerName);
   const loc2 = (state.addedDealers.find(d=>d.dealer===dealerName)||{}).location||"";
@@ -2219,7 +2251,7 @@ function computeStatsData() {
   const result = {};
   PRODUCTS.forEach(p => { result[p.key] = { label: p.label, count:{A:0,B:0,C:0,D:0}, dealerSet:{A:new Set(),B:new Set(),C:new Set(),D:new Set()} }; });
   state.addedDealers.forEach(d => {
-    Object.values(getDealerFinanciers(d.dealer)).forEach(fdata => {
+    Object.values(getDealerFinanciers(d.dealer, d.location||'')).forEach(fdata => {
       PRODUCTS.forEach(p => {
         const pd = fdata.products[p.key];
         if (pd?.enabled && pd.category) { result[p.key].count[pd.category]++; result[p.key].dealerSet[pd.category].add(d.dealer); }
@@ -2265,8 +2297,8 @@ function setStatsTab(tab, btn) {
 // PAGE 2 — COVERAGE GAPS
 // ══════════════════════════════════════════════════════════════
 
-function analyzeProduct(dealerName, productKey) {
-  const fins = getDealerFinanciers(dealerName);
+function analyzeProduct(dealerName, productKey, dealerLoc) {
+  const fins = getDealerFinanciers(dealerName, dealerLoc||'');
   let hasStrongFin = false, enabled = false, cats = [], financierDetails = [];
   Object.entries(fins).forEach(([finName, fdata]) => {
     const pd = fdata.products[productKey];
@@ -2440,7 +2472,7 @@ function renderFinancierMaster() {
   }).length;
   var totalDealerLinks = 0;
   state.financiers.forEach(function(f) {
-    state.addedDealers.forEach(function(d) { if (getDealerFinanciers(d.dealer)[f]) totalDealerLinks++; });
+    state.addedDealers.forEach(function(d) { if (getDealerFinanciers(d.dealer, d.location||'')[f]) totalDealerLinks++; });
   });
   var types = [];
   state.financiersMeta.forEach(function(m) { if (m.category && types.indexOf(m.category) === -1) types.push(m.category); });
@@ -2479,7 +2511,7 @@ function renderFinancierMaster() {
   var rows = filtered.map(function(item, idx) {
     var name = item.name; var m = item.meta;
     var dc = 0;
-    state.addedDealers.forEach(function(d) { if (getDealerFinanciers(d.dealer)[name]) dc++; });
+    state.addedDealers.forEach(function(d) { if (getDealerFinanciers(d.dealer, d.location||'')[name]) dc++; });
     var commentSafe = escHtml(m.comments || "");
     return '<tr>' +
       '<td style="text-align:center;font-size:12px;color:var(--text-muted);">' + (idx+1) + '</td>' +
@@ -2641,9 +2673,10 @@ function saveFinancierMaster() {
     // Rename in mapping if name changed
     if (name !== editingFinancierName) {
       Object.keys(state.mapping).forEach(dealer => {
-        if (state.mapping[dealer][editingFinancierName]) {
-          state.mapping[dealer][name] = state.mapping[dealer][editingFinancierName];
-          delete state.mapping[dealer][editingFinancierName];
+        const dkR = Object.keys(state.mapping).find(k => k === dealer || k.startsWith(dealer + '||'));
+        if (dkR && state.mapping[dkR][editingFinancierName]) {
+          state.mapping[dkR][name] = state.mapping[dkR][editingFinancierName];
+          delete state.mapping[dkR][editingFinancierName];
         }
       });
     }
@@ -2668,8 +2701,8 @@ function confirmDeleteFinancier(name) {
   document.getElementById("confirmFinDeleteBtn").onclick = () => {
     state.financiers = state.financiers.filter(f => f !== name);
     state.financiersMeta = state.financiersMeta.filter(m => m.name !== name);
-    Object.keys(state.mapping).forEach(dealer => {
-      if (state.mapping[dealer][name]) delete state.mapping[dealer][name];
+    Object.keys(state.mapping).forEach(mapKey => {
+      if (state.mapping[mapKey][name]) delete state.mapping[mapKey][name];
     });
     closeConfirmFinModal();
     deleteFIMasterFromSheet(name); renderAll(); renderFinancierMaster(); renderFilters();
@@ -3522,8 +3555,9 @@ function closeFIPolicyModal() {
 let healthContext = null;
 let selectedHealth = null;
 
-function computeOverallHealth(dealerName) {
-  const h = state.dealerHealth[dealerName] || {};
+function computeOverallHealth(dealerName, location) {
+  const hk = dealerKey(dealerName, location||'');
+  const h = state.dealerHealth[hk] || state.dealerHealth[dealerName] || {};
   const setValues = PRODUCTS.map(p => h[p.key]).filter(v => v && v !== 'na');
   if (!setValues.length) return null;
   const redCount   = setValues.filter(v => v === 'red').length;
@@ -3540,7 +3574,9 @@ function computeOverallHealth(dealerName) {
 
 function openHealthModal(dealerName, productKey, productLabel) {
   healthContext = { dealerName, productKey, productLabel };
-  selectedHealth = (state.dealerHealth[dealerName] || {})[productKey] || null;
+  const hCtx = state.addedDealers.find(d=>d.dealer===dealerName)||{};
+  const hkCtx = dealerKey(dealerName, hCtx.location||'');
+  selectedHealth = (state.dealerHealth[hkCtx] || state.dealerHealth[dealerName] || {})[productKey] || null;
   document.getElementById("healthModalTitle").textContent = "Health Status";
   document.getElementById("healthModalSub").textContent = `${dealerName} · ${productLabel}`;
   ['green','amber','red','na'].forEach(h => {
@@ -3566,14 +3602,13 @@ function selectHealth(val) {
 function saveHealthStatus() {
   if (!healthContext) return;
   const { dealerName, productKey } = healthContext;
-  if (!state.dealerHealth[dealerName]) state.dealerHealth[dealerName] = {};
-  if (selectedHealth) {
-    state.dealerHealth[dealerName][productKey] = selectedHealth;
-  } else {
-    delete state.dealerHealth[dealerName][productKey];
-  }
+  const hk2 = dealerKey(dealerName, (state.addedDealers.find(d=>d.dealer===dealerName)||{}).location||'');
+  if (!state.dealerHealth[hk2]) state.dealerHealth[hk2] = {};
+  if (selectedHealth) { state.dealerHealth[hk2][productKey] = selectedHealth; }
+  else { delete state.dealerHealth[hk2][productKey]; }
   closeHealthModal();
-  openDealerCards.add(dealerName);
+  const locHA = (state.addedDealers.find(d=>d.dealer===dealerName)||{}).location||'';
+  openDealerCards.add(dealerKey(dealerName, locHA));
   const locH = (state.addedDealers.find(d=>d.dealer===dealerName)||{}).location||"";
   saveDealerHealthToSheet(dealerName, locH);
   renderAll();
@@ -3724,7 +3759,8 @@ function runMatcher() {
   }
 
   var profile = getCustomerProfile(type);
-  var fins = getDealerFinanciers(dealerName);
+  var matcherDealerObj = state.addedDealers.find(function(d){ return d.dealer===dealerName; }) || {};
+  var fins = getDealerFinanciers(dealerName, matcherDealerObj.location||'');
 
   // Filter FIs onboarded for this product
   var onboardedFIs = Object.entries(fins).filter(function(e) {
@@ -3825,12 +3861,12 @@ function exportDealerDashboard() {
   const headers = ["Dealer", "Location", "VF POC", "Financiers", "Overall Health",
     "3WC Health", "3WP Health", "4WCS Health", "4WCT Health"];
   const rows = [headers, ...state.addedDealers.map(d => {
-    const fins = Object.keys(getDealerFinanciers(d.dealer));
-    const h = state.dealerHealth[d.dealer] || {};
+    const fins = Object.keys(getDealerFinanciers(d.dealer, d.location));
+    const h = state.dealerHealth[dealerKey(d.dealer, d.location||'')] || state.dealerHealth[d.dealer] || {};
     return [
       d.dealer, d.location||"", d.vfPoc||"",
       fins.join(", "),
-      computeOverallHealth(d.dealer)||"Not Set",
+      computeOverallHealth(d.dealer, d.location||'')||"Not Set",
       h['3wc']||"na", h['3wp']||"na", h['4wc_storm']||"na", h['4wc_turbo']||"na"
     ];
   })];
