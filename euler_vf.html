@@ -550,6 +550,15 @@
   .login-error { background: var(--cat-d-bg); color: var(--cat-d); border: 1px solid var(--cat-d-border); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; text-align: center; }
   .login-error.show { display: block; }
 
+
+  /* ── Geo Override ── */
+  .geo-row { background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:10px; overflow:hidden; }
+  .geo-row-header { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; cursor:pointer; }
+  .geo-row-header:hover { background:var(--surface3); }
+  .geo-row-body { padding:14px; border-top:1px solid var(--border); display:none; }
+  .geo-row-body.open { display:block; }
+  .geo-field-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -1064,11 +1073,39 @@
       <input type="number" class="form-select" id="fip_ind_maxTenure" placeholder="e.g. 48" style="display:none;" min="0">
     </div>
             <div class="form-group" style="margin:0;">
+      <label class="form-label">Provides Loan on <span style="color:var(--flag);">*</span></label>
+      <div id="fip_ind_loanOn_view" class="fip-view-field">—</div>
+      <select class="form-select" id="fip_ind_loanOn" style="display:none;">
+        <option value="">— Select —</option>
+        <option value="ESP">ESP</option>
+        <option value="ORP">ORP</option>
+        <option value="Either">Either</option>
+      </select>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Max Loan Amount Type <span style="color:var(--flag);">*</span></label>
+      <div id="fip_ind_loanAmtType_view" class="fip-view-field">—</div>
+      <select class="form-select" id="fip_ind_loanAmtType" style="display:none;" onchange="updateLoanAmtFields('ind')">
+        <option value="">— Select —</option>
+        <option value="Percentage">% of Vehicle Cost</option>
+        <option value="Absolute">Absolute Value (₹)</option>
+        <option value="Both">Both</option>
+      </select>
+    </div>
+            <div class="form-group" style="margin:0;">
       <label class="form-label">Max Loan Amount <span style="color:var(--flag);">*</span></label>
       <div id="fip_ind_maxLoan_view" class="fip-view-field">—</div>
-      <div id="fip_ind_maxLoan_edit_wrap" style="display:none;position:relative;">
-        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">₹</span>
-        <input type="number" class="form-select" id="fip_ind_maxLoan" placeholder="0" style="padding-left:22px;" min="0">
+      <!-- Shown based on loanAmtType selection -->
+      <div id="fip_ind_maxLoan_edit_wrap" style="display:none;">
+        <div id="fip_ind_maxLoanPct_row" style="display:none;margin-bottom:6px;position:relative;">
+          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">%</span>
+          <input type="number" class="form-select" id="fip_ind_maxLoanPct" placeholder="e.g. 85" style="padding-left:28px;" min="0" max="100" step="0.1">
+          <span style="font-size:10px;color:var(--text-hint);margin-left:4px;">% of vehicle cost</span>
+        </div>
+        <div id="fip_ind_maxLoanAbs_row" style="display:none;position:relative;">
+          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">₹</span>
+          <input type="number" class="form-select" id="fip_ind_maxLoan" placeholder="0" style="padding-left:22px;" min="0">
+        </div>
       </div>
     </div>
             <div class="form-group" style="margin:0;">
@@ -1145,6 +1182,42 @@
               </div>
             </div>
           </div>
+
+          <!-- ── GEO OVERRIDES IND ── -->
+          <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+              <div>
+                <div class="form-label" style="margin:0;">State/City Specific Parameters</div>
+                <div style="font-size:11px;color:var(--text-hint);margin-top:2px;">Define Individual policy overrides for specific locations</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+                <span id="fip_geo_ind_toggle_label" style="font-size:12px;font-weight:600;color:var(--cat-d);">No</span>
+                <div id="fip_geo_ind_toggle_track" onclick="toggleGeoOverride('ind')" style="width:36px;height:20px;border-radius:10px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
+                  <div id="fip_geo_ind_toggle_thumb" style="width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+                </div>
+              </div>
+            </div>
+            <div id="fip_geo_ind_section" style="display:none;">
+              <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:12px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:140px;">
+                  <label class="form-label" style="margin-bottom:4px;">State</label>
+                  <select class="form-select" id="fip_geo_ind_state" onchange="updateGeoCityDropdown('ind')">
+                    <option value="">— Select State —</option>
+                  </select>
+                </div>
+                <div style="flex:1;min-width:140px;">
+                  <label class="form-label" style="margin-bottom:4px;">City</label>
+                  <select class="form-select" id="fip_geo_ind_city">
+                    <option value="">— Select City —</option>
+                  </select>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="addGeoOverrideRow('ind')">+ Add Override</button>
+              </div>
+              <div id="fip_geo_ind_rows_container">
+                <div style="font-size:12px;color:var(--text-hint);padding:8px 0;">No overrides defined yet. Select a state and city above.</div>
+              </div>
+            </div>
+          </div>
           <div class="form-group" style="margin-bottom:8px;">
             <label class="form-label">Remarks</label>
             <div id="fip_ind_remarks_view" class="fip-view-field" style="min-height:40px;">—</div>
@@ -1180,11 +1253,39 @@
       <input type="number" class="form-select" id="fip_co_maxTenure" placeholder="e.g. 48" style="display:none;" min="0">
     </div>
             <div class="form-group" style="margin:0;">
+      <label class="form-label">Provides Loan on <span style="color:var(--flag);">*</span></label>
+      <div id="fip_co_loanOn_view" class="fip-view-field">—</div>
+      <select class="form-select" id="fip_co_loanOn" style="display:none;">
+        <option value="">— Select —</option>
+        <option value="ESP">ESP</option>
+        <option value="ORP">ORP</option>
+        <option value="Either">Either</option>
+      </select>
+    </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Max Loan Amount Type <span style="color:var(--flag);">*</span></label>
+      <div id="fip_co_loanAmtType_view" class="fip-view-field">—</div>
+      <select class="form-select" id="fip_co_loanAmtType" style="display:none;" onchange="updateLoanAmtFields('co')">
+        <option value="">— Select —</option>
+        <option value="Percentage">% of Vehicle Cost</option>
+        <option value="Absolute">Absolute Value (₹)</option>
+        <option value="Both">Both</option>
+      </select>
+    </div>
+            <div class="form-group" style="margin:0;">
       <label class="form-label">Max Loan Amount <span style="color:var(--flag);">*</span></label>
       <div id="fip_co_maxLoan_view" class="fip-view-field">—</div>
-      <div id="fip_co_maxLoan_edit_wrap" style="display:none;position:relative;">
-        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">₹</span>
-        <input type="number" class="form-select" id="fip_co_maxLoan" placeholder="0" style="padding-left:22px;" min="0">
+      <!-- Shown based on loanAmtType selection -->
+      <div id="fip_co_maxLoan_edit_wrap" style="display:none;">
+        <div id="fip_co_maxLoanPct_row" style="display:none;margin-bottom:6px;position:relative;">
+          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">%</span>
+          <input type="number" class="form-select" id="fip_co_maxLoanPct" placeholder="e.g. 85" style="padding-left:28px;" min="0" max="100" step="0.1">
+          <span style="font-size:10px;color:var(--text-hint);margin-left:4px;">% of vehicle cost</span>
+        </div>
+        <div id="fip_co_maxLoanAbs_row" style="display:none;position:relative;">
+          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">₹</span>
+          <input type="number" class="form-select" id="fip_co_maxLoan" placeholder="0" style="padding-left:22px;" min="0">
+        </div>
       </div>
     </div>
             <div class="form-group" style="margin:0;">
@@ -1262,6 +1363,42 @@
                 oninput="updateFlexLabel('co',this.value)">
               <div style="text-align:center;margin-top:6px;">
                 <span id="fip_co_flexibility_label" style="font-size:12px;font-weight:600;color:var(--accent);">NA</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── GEO OVERRIDES CO ── -->
+          <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+              <div>
+                <div class="form-label" style="margin:0;">State/City Specific Parameters</div>
+                <div style="font-size:11px;color:var(--text-hint);margin-top:2px;">Define Company Owned policy overrides for specific locations</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+                <span id="fip_geo_co_toggle_label" style="font-size:12px;font-weight:600;color:var(--cat-d);">No</span>
+                <div id="fip_geo_co_toggle_track" onclick="toggleGeoOverride('co')" style="width:36px;height:20px;border-radius:10px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
+                  <div id="fip_geo_co_toggle_thumb" style="width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+                </div>
+              </div>
+            </div>
+            <div id="fip_geo_co_section" style="display:none;">
+              <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:12px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:140px;">
+                  <label class="form-label" style="margin-bottom:4px;">State</label>
+                  <select class="form-select" id="fip_geo_co_state" onchange="updateGeoCityDropdown('co')">
+                    <option value="">— Select State —</option>
+                  </select>
+                </div>
+                <div style="flex:1;min-width:140px;">
+                  <label class="form-label" style="margin-bottom:4px;">City</label>
+                  <select class="form-select" id="fip_geo_co_city">
+                    <option value="">— Select City —</option>
+                  </select>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="addGeoOverrideRow('co')">+ Add Override</button>
+              </div>
+              <div id="fip_geo_co_rows_container">
+                <div style="font-size:12px;color:var(--text-hint);padding:8px 0;">No overrides defined yet. Select a state and city above.</div>
               </div>
             </div>
           </div>
@@ -1580,7 +1717,7 @@ const PRODUCTS = [
 const CATS = ["A","B","C","D"];
 const CAT_COLORS = { A:'var(--cat-a)', B:'var(--cat-b)', C:'var(--cat-c)', D:'var(--cat-d)' };
 
-let state = { dealers: [], financiers: [], financiersMeta: [], mapping: {}, addedDealers: [], dealersMaster: [], fiPolicy: {}, dealerHealth: {}, taifData: [] };
+let state = { dealers: [], financiers: [], financiersMeta: [], mapping: {}, addedDealers: [], dealersMaster: [], fiPolicy: {}, fiPolicyGeo: [], dealerHealth: {}, taifData: [] };
 let modalContext = null;
 let openDealerCards = new Set();
 let openGapCards = new Set();
@@ -1597,19 +1734,25 @@ const API = {
     return h;
   },
   _handle: function(r) {
-    if (r.status === 401) { showLoginScreen('Session expired. Please log in again.'); return []; }
+    if (r.status === 401) {
+      showLoginScreen('Session expired. Please log in again.');
+      return Promise.resolve([]);
+    }
     return r.text().then(function(text) {
-      try { return JSON.parse(text); } catch(e) { return []; }
+      try { return JSON.parse(text); } catch(e) { console.error('JSON parse error:', text.slice(0,100)); return []; }
     });
   },
   get: function(path) {
-    return fetch(path, { headers: this._headers() }).then(r => this._handle(r));
+    var self = this;
+    return fetch(path, { headers: self._headers() }).then(function(r){ return self._handle(r); });
   },
   post: function(path, data) {
-    return fetch(path, { method:'POST', headers: this._headers(), body: JSON.stringify(data) }).then(r => this._handle(r));
+    var self = this;
+    return fetch(path, { method:'POST', headers: self._headers(), body: JSON.stringify(data) }).then(function(r){ return self._handle(r); });
   },
   delete: function(path) {
-    return fetch(path, { method:'DELETE', headers: this._headers() }).then(r => this._handle(r));
+    var self = this;
+    return fetch(path, { method:'DELETE', headers: self._headers() }).then(function(r){ return self._handle(r); });
   }
 };
 
@@ -1629,25 +1772,37 @@ async function loadState() {
   if (loader) loader.style.display = 'flex';
   setSaveStatus('saving');
   try {
-    const [fiMaster, dealerMaster, addedDealers, onboarding, fiPolicy, dealerHealth, taif] = await Promise.all([
+    const [fiMaster, dealerMaster, addedDealers, onboarding, fiPolicy, dealerHealth, taif, fiPolicyGeo] = await Promise.all([
       API.get('/api/fi_master'),
       API.get('/api/dealer_master'),
       API.get('/api/added_dealers'),
       API.get('/api/onboarding'),
       API.get('/api/fi_policy'),
       API.get('/api/dealer_health'),
-      API.get('/api/taif')
+      API.get('/api/taif'),
+      API.get('/api/fi_policy_geo')
     ]);
 
     // Ensure all responses are arrays
     const toArr = v => Array.isArray(v) ? v : [];
     const fiM   = toArr(fiMaster);
     state.taifData = toArr(taif);
+    state.fiPolicyGeo = toArr(fiPolicyGeo);
     const dmM   = toArr(dealerMaster);
     const adM   = toArr(addedDealers);
     const onbM  = toArr(onboarding);
     const fipM  = toArr(fiPolicy);
     const dhM   = toArr(dealerHealth);
+
+    // Debug log — remove after confirming data loads
+    console.log('[loadState] Counts:', {
+      fiMaster: fiM.length, dealerMaster: dmM.length,
+      addedDealers: adM.length, onboarding: onbM.length,
+      fiPolicy: fipM.length, dealerHealth: dhM.length,
+      taif: state.taifData.length, fiPolicyGeo: state.fiPolicyGeo.length
+    });
+    console.log('[loadState] Raw addedDealers:', adM.slice(0,3));
+    console.log('[loadState] Raw fiMaster sample:', fiM.slice(0,2));
 
     // FI Master
     state.financiers = fiM.map(f => f.name).filter(Boolean);
@@ -1704,8 +1859,8 @@ async function loadState() {
       if (!row.financier || !row.productKey) return;
       if (!state.fiPolicy[row.financier]) state.fiPolicy[row.financier] = {};
       const pol = { ind_applicable: row.ind_applicable === 'true', co_applicable: row.co_applicable === 'true', ind: {}, co: {} };
-      ['minCibil','maxTenure','maxLoan','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','flexibility','remarks'].forEach(k => { pol.ind[k] = row['ind_'+k]||''; });
-      ['maxTenure','maxLoan','minIrr','vintage','ntc','itr','flexibility','remarks'].forEach(k => { pol.co[k] = row['co_'+k]||''; });
+      ['minCibil','maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','flexibility','remarks'].forEach(k => { pol.ind[k] = row['ind_'+k]||''; });
+      ['maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','vintage','ntc','itr','flexibility','remarks'].forEach(k => { pol.co[k] = row['co_'+k]||''; });
         // Load tiered criteria
         try { pol.co.tiers = row['co_tiers'] ? JSON.parse(row['co_tiers']) : []; } catch(e) { pol.co.tiers = []; }
       state.fiPolicy[row.financier][row.productKey] = pol;
@@ -1771,8 +1926,8 @@ async function saveFIPolicyToSheet(fiName, productKey) {
   const pol = (state.fiPolicy[fiName]||{})[productKey]||{};
   const row = { financier: fiName, productKey,
     ind_applicable: String(!!pol.ind_applicable), co_applicable: String(!!pol.co_applicable) };
-  ['minCibil','maxTenure','maxLoan','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','flexibility','remarks'].forEach(k => { row['ind_'+k] = (pol.ind||{})[k]||''; });
-  ['maxTenure','maxLoan','minIrr','vintage','ntc','itr','flexibility','remarks'].forEach(k => { row['co_'+k] = (pol.co||{})[k]||''; });
+  ['minCibil','maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','flexibility','remarks'].forEach(k => { row['ind_'+k] = (pol.ind||{})[k]||''; });
+  ['maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','vintage','ntc','itr','flexibility','remarks'].forEach(k => { row['co_'+k] = (pol.co||{})[k]||''; });
   // Save tiers as JSON string
   row['co_tiers'] = JSON.stringify((pol.co||{}).tiers||[]);
   setSaveStatus('saving');
@@ -2941,23 +3096,23 @@ const FIP_SEGMENTS = ['ind', 'co'];
 
 // Field keys for each segment — used for save/load/clear
 const FIP_SEG_FIELDS = {
-  ind: ['minCibil','maxTenure','maxLoan','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','flexibility','remarks'],
-  co:  ['maxTenure','maxLoan','minIrr','vintage','ntc','itr','flexibility','remarks']
+  ind: ['minCibil','maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','flexibility','remarks'],
+  co:  ['maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','vintage','ntc','itr','flexibility','remarks']
 };
 
 // Fields that are toggle yes/no (stored as 'Yes'/'No')
 const FIP_TOGGLE_FIELDS = { ind: ['ntc','ftu','ftb'], co: ['ntc','itr'] };
 
 // INR display fields
-const FIP_INR_FIELDS = { ind: ['maxLoan'], co: ['maxLoan'] };
+const FIP_INR_FIELDS = { ind: ['maxLoan'], co: ['maxLoan'] }; // maxLoanPct handled separately
 
 // PCT display fields
 const FIP_PCT_FIELDS = { ind: ['minIrr'], co: ['minIrr'] };
 
 // Mandatory fields per segment (all except remarks)
 const FIP_MANDATORY = {
-  ind: ['minCibil','maxTenure','maxLoan','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','flexibility'],
-  co:  ['maxTenure','maxLoan','minIrr','vintage','ntc','itr','flexibility']
+  ind: ['minCibil','maxTenure','loanOn','loanAmtType','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','flexibility'],
+  co:  ['maxTenure','loanOn','loanAmtType','minIrr','vintage','ntc','itr','flexibility']
 };
 const FIP_CONDITIONAL_MANDATORY = {}; // tiered criteria handled separately
 
@@ -3175,7 +3330,74 @@ function toggleFIPolicySegment(seg) {
   }
 }
 
-// ── TIERED CRITERIA (Turnover + Fleet) ──────────────────────
+// ── LOAN AMOUNT TYPE HANDLER ─────────────────────────────────
+function updateLoanAmtFields(seg, val) {
+  val = val || document.getElementById('fip_' + seg + '_loanAmtType').value;
+  var pctRow = document.getElementById('fip_' + seg + '_maxLoanPct_row');
+  var absRow = document.getElementById('fip_' + seg + '_maxLoanAbs_row');
+  var wrap   = document.getElementById('fip_' + seg + '_maxLoan_edit_wrap');
+  if (!pctRow || !absRow) return;
+  if (val === 'Percentage') {
+    wrap.style.display  = '';
+    pctRow.style.display = '';
+    absRow.style.display = 'none';
+  } else if (val === 'Absolute') {
+    wrap.style.display  = '';
+    pctRow.style.display = 'none';
+    absRow.style.display = '';
+  } else if (val === 'Both') {
+    wrap.style.display  = '';
+    pctRow.style.display = '';
+    absRow.style.display = '';
+  } else {
+    wrap.style.display  = 'none';
+    pctRow.style.display = 'none';
+    absRow.style.display = 'none';
+  }
+}
+
+function getLoanAmtView(seg, data) {
+  var type = data.loanAmtType || '';
+  if (!type) return '—';
+  if (type === 'Percentage') return (data.maxLoanPct ? data.maxLoanPct + '% of vehicle cost' : '—');
+  if (type === 'Absolute')   return (data.maxLoan ? '₹' + Number(data.maxLoan).toLocaleString('en-IN') : '—');
+  if (type === 'Both') {
+    var parts = [];
+    if (data.maxLoanPct) parts.push(data.maxLoanPct + '% of vehicle cost');
+    if (data.maxLoan)    parts.push('₹' + Number(data.maxLoan).toLocaleString('en-IN'));
+    return parts.join(' / ') || '—';
+  }
+  return '—';
+}
+
+function setLoanAmtFields(seg, data) {
+  // Set loanOn dropdown
+  var loanOnEl = document.getElementById('fip_' + seg + '_loanOn');
+  if (loanOnEl) loanOnEl.value = data.loanOn || '';
+  var loanOnView = document.getElementById('fip_' + seg + '_loanOn_view');
+  if (loanOnView) loanOnView.textContent = data.loanOn || '—';
+
+  // Set loanAmtType dropdown
+  var typeEl = document.getElementById('fip_' + seg + '_loanAmtType');
+  if (typeEl) typeEl.value = data.loanAmtType || '';
+  var typeView = document.getElementById('fip_' + seg + '_loanAmtType_view');
+  if (typeView) typeView.textContent = data.loanAmtType || '—';
+
+  // Set pct and abs values
+  var pctEl = document.getElementById('fip_' + seg + '_maxLoanPct');
+  if (pctEl) pctEl.value = data.maxLoanPct || '';
+  var absEl = document.getElementById('fip_' + seg + '_maxLoan');
+  if (absEl) absEl.value = data.maxLoan || '';
+
+  // Set combined view
+  var loanView = document.getElementById('fip_' + seg + '_maxLoan_view');
+  if (loanView) loanView.textContent = getLoanAmtView(seg, data);
+
+  // Show/hide sub-fields based on type (in view mode: hide wrap)
+  updateLoanAmtFields(seg, '');
+}
+
+
 var _fipTiers = []; // working copy while editing
 
 function addFIPTier() {
@@ -3327,6 +3549,8 @@ function openFIPolicyModal(fiName, productKey, productLabel) {
     var saveBtn = document.getElementById('fip_' + seg + '_saveBtn');
     if (editBtn) editBtn.style.display = applicable ? '' : 'none';
     if (saveBtn) saveBtn.style.display = 'none';
+    // Init loan amount fields
+    setLoanAmtFields(seg, data);
     // Init tiers for co
     if (seg === 'co') {
       _fipTiers = JSON.parse(JSON.stringify((data.tiers && data.tiers.length) ? data.tiers : []));
@@ -3336,6 +3560,9 @@ function openFIPolicyModal(fiName, productKey, productLabel) {
 
   document.getElementById('fiPolicyModalOverlay').classList.add('show');
   switchFIPTab('ind');
+  initGeoSection(fiName, productKey);
+  // Start geo sections as non-editable (edit mode not active yet)
+  ['ind','co'].forEach(function(seg){ setGeoSectionEditable(seg, false); });
 }
 
 // ── FLEXIBILITY SLIDER ───────────────────────────────────────
@@ -3349,8 +3576,14 @@ function updateFlexLabel(seg, val) {
 }
 
 function setFlexSlider(seg, val) {
+  // val may be "NA"/"Low"/"Medium"/"High" or "0"/"1"/"2"/"3" from sheet
   var idx = FLEX_VALUES.indexOf(val);
-  if (idx === -1) idx = 0;
+  if (idx === -1) {
+    // Try numeric
+    var n = parseInt(val);
+    idx = (!isNaN(n) && n >= 0 && n <= 3) ? n : 0;
+    val = FLEX_VALUES[idx];
+  }
   var slider = document.getElementById('fip_' + seg + '_flexibility');
   var view   = document.getElementById('fip_' + seg + '_flexibility_view');
   var wrap   = document.getElementById('fip_' + seg + '_flexibility_wrap');
@@ -3397,6 +3630,15 @@ function enterFIPSegmentEditMode(seg) {
   if (editBtn) editBtn.style.display = 'none';
   if (saveBtn) saveBtn.style.display = '';
   if (seg === 'co') enterFIPTierEditMode();
+  // Enable geo section in edit mode
+  setGeoSectionEditable(seg, true);
+  // Show loan amount fields in edit mode
+  var loanOnEl = document.getElementById('fip_' + seg + '_loanOn');
+  if (loanOnEl) loanOnEl.style.display = '';
+  var typeEl = document.getElementById('fip_' + seg + '_loanAmtType');
+  if (typeEl) typeEl.style.display = '';
+  var typeVal = typeEl ? typeEl.value : '';
+  updateLoanAmtFields(seg, typeVal);
 }
 
 function enterFIPSegmentViewMode(seg) {
@@ -3433,6 +3675,25 @@ function enterFIPSegmentViewMode(seg) {
   if (editBtn) editBtn.style.display = '';
   if (saveBtn) saveBtn.style.display = 'none';
   if (seg === 'co') exitFIPTierEditMode(_fipTiers);
+  // Disable geo section in view mode
+  setGeoSectionEditable(seg, false);
+  // Hide loan edit fields, update view
+  var loanOnEl2 = document.getElementById('fip_' + seg + '_loanOn');
+  if (loanOnEl2) loanOnEl2.style.display = 'none';
+  var typeEl2 = document.getElementById('fip_' + seg + '_loanAmtType');
+  if (typeEl2) typeEl2.style.display = 'none';
+  updateLoanAmtFields(seg, '');
+  var loanView = document.getElementById('fip_' + seg + '_maxLoan_view');
+  if (loanView) {
+    var typeVal2 = typeEl2 ? typeEl2.value : '';
+    var pctVal  = (document.getElementById('fip_'+seg+'_maxLoanPct')||{}).value||'';
+    var absVal  = (document.getElementById('fip_'+seg+'_maxLoan')||{}).value||'';
+    loanView.textContent = getLoanAmtView(seg, { loanAmtType: typeVal2, maxLoanPct: pctVal, maxLoan: absVal });
+  }
+  var loanOnView2 = document.getElementById('fip_' + seg + '_loanOn_view');
+  if (loanOnView2 && loanOnEl2) loanOnView2.textContent = loanOnEl2.value || '—';
+  var typeView2 = document.getElementById('fip_' + seg + '_loanAmtType_view');
+  if (typeView2 && typeEl2) typeView2.textContent = typeEl2.value || '—';
 }
 
 function fipSegmentMandatoryCheck(seg) {
@@ -3462,7 +3723,7 @@ function fipSegmentMandatoryCheck(seg) {
 }
 
 const FIP_FIELD_LABELS = {
-  maxTenure: 'Max Loan Tenure', maxLoan: 'Max Loan Amount',
+  maxTenure: 'Max Loan Tenure', loanOn: 'Provides Loan on', loanAmtType: 'Max Loan Amount Type', maxLoan: 'Max Loan Amount', maxLoanPct: 'Max Loan % of Vehicle Cost',
   minIrr: 'Minimum IRR', residence: 'Residence Criteria',
   guarantor: 'Guarantor Required', bankStatement: 'L6M Bank Statement',
   licenseType: 'License Type', ntc: 'NTC Loan',
@@ -3490,7 +3751,12 @@ function saveFIPSegment(seg) {
   (FIP_SEG_FIELDS[seg] || []).forEach(function(key) {
     var fid = 'fip_' + seg + '_' + key;
     var val;
-    if (isToggleField(seg, key)) {
+    if (key === 'flexibility') {
+      val = getFlexValue(seg);
+    } else if (key === 'maxLoanPct') {
+      var pctInput = document.getElementById('fip_' + seg + '_maxLoanPct');
+      val = pctInput ? pctInput.value.trim() : '';
+    } else if (isToggleField(seg, key)) {
       val = getFIPYNValue(fid);
     } else {
       var eEl = document.getElementById(fid);
@@ -3512,6 +3778,19 @@ function saveFIPSegment(seg) {
     exitFIPTierEditMode(_fipTiers);
   }
   state.fiPolicy[fiName][productKey] = pol;
+  // Auto-disable geo toggle if enabled but no overrides defined with properties
+  var geoLabel = document.getElementById('fip_geo_'+seg+'_toggle_label');
+  if (geoLabel && geoLabel.textContent === 'Yes') {
+    var ctx = fiPolicyContext;
+    var hasValidGeo = (state.fiPolicyGeo||[]).some(function(r){
+      return r.financier===ctx.fiName && r.productKey===ctx.productKey && r.seg===seg &&
+             getGeoFieldDefs(seg).some(function(f){ return r.hasOwnProperty('seg_'+f.key) && (r['seg_'+f.key]||'').trim(); });
+    });
+    if (!hasValidGeo) {
+      setGeoToggle(seg, false);
+      toast('ℹ State/City overrides turned off — no overrides were defined.');
+    }
+  }
   enterFIPSegmentViewMode(seg);
   saveFIPolicyToSheet(fiName, productKey);
   renderFIPolicy();
@@ -3908,10 +4187,10 @@ function exportDealerMaster() {
 
 function exportFIPolicy() {
   const headers = ["Financier","Product",
-    "Ind Applicable","Ind Min CIBIL","Ind Max Tenure","Ind Max Loan","Ind Min IRR",
+    "Ind Applicable","Ind Min CIBIL","Ind Max Tenure","Ind Loan On","Ind Loan Amt Type","Ind Max Loan (₹)","Ind Max Loan (%)","Ind Min IRR",
     "Ind Residence","Ind Guarantor","Ind Bank Statement",
     "Ind License Type","Ind NTC","Ind FTU","Ind FTB","Ind Flexibility","Ind Remarks",
-    "CO Applicable","CO Max Tenure","CO Max Loan","CO Min IRR",
+    "CO Applicable","CO Max Tenure","CO Loan On","CO Loan Amt Type","CO Max Loan (₹)","CO Max Loan (%)","CO Min IRR",
     "CO Vintage","CO NTC","CO ITR Filed","CO Flexibility","CO Turnover/Fleet Tiers","CO Remarks"];
   const rows = [headers];
   state.financiers.forEach(fi => {
@@ -3921,11 +4200,11 @@ function exportFIPolicy() {
       const i = pol.ind||{}, c = pol.co||{};
       rows.push([fi, p.label,
         pol.ind_applicable?"Yes":"No",
-        i.minCibil||"", i.maxTenure||"", i.maxLoan||"", i.minIrr||"",
+        i.minCibil||"", i.maxTenure||"", i.loanOn||"", i.loanAmtType||"", i.maxLoan||"", i.maxLoanPct||"", i.minIrr||"",
         i.residence||"", i.guarantor||"",
         i.bankStatement||"", i.licenseType||"", i.ntc||"", i.ftu||"", i.ftb||"", i.flexibility||"", i.remarks||"",
         pol.co_applicable?"Yes":"No",
-        c.maxTenure||"", c.maxLoan||"", c.minIrr||"",
+        c.maxTenure||"", c.loanOn||"", c.loanAmtType||"", c.maxLoan||"", c.maxLoanPct||"", c.minIrr||"",
         c.vintage||"", c.ntc||"", c.itr||"", c.flexibility||"", JSON.stringify((c.tiers||[])), c.remarks||""
       ]);
     });
@@ -4221,7 +4500,8 @@ function attemptLogin() {
     body: JSON.stringify({ id: id, pass: pass })
   }).then(function(r) { return r.json(); }).then(function(data) {
     if (data.ok) {
-      sessionStorage.setItem('vf_token', data.token);
+      if (data.token) sessionStorage.setItem('vf_token', data.token);
+      console.log('[login] token received:', data.token ? 'yes' : 'NO TOKEN IN RESPONSE');
       document.getElementById('loginScreen').classList.add('hide');
       document.getElementById('loginError').classList.remove('show');
       startInactivityTimer();
@@ -4245,6 +4525,420 @@ function toggleLoginPassVisibility() {
   var btn = document.getElementById('loginPassToggle');
   if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
   else { inp.type = 'password'; btn.textContent = '👁'; }
+}
+
+// ══════════════════════════════════════════════════════════════
+// GEO OVERRIDE — per segment (ind / co)
+// ══════════════════════════════════════════════════════════════
+
+function getEffectivePolicy(fi, pk, dealerState, dealerCity) {
+  var base = (state.fiPolicy[fi] || {})[pk] || null;
+  var merged = base ? JSON.parse(JSON.stringify(base)) : {};
+  ['ind','co'].forEach(function(seg) {
+    var geo = (state.fiPolicyGeo||[]).find(function(r){
+      return r.financier===fi && r.productKey===pk &&
+             r.seg===seg && r.state===dealerState && r.city===dealerCity;
+    });
+    if (!geo) return;
+    if (!merged[seg]) merged[seg] = {};
+    FIP_SEG_FIELDS[seg].forEach(function(k){
+      var v = geo['seg_'+k]; if (v!==undefined && v!=='') merged[seg][k]=v;
+    });
+    var ga = geo['seg_applicable'];
+    if (ga!==undefined && ga!=='') merged[seg+'_applicable'] = ga==='true'||ga===true;
+  });
+  return merged;
+}
+
+function toggleGeoOverride(seg) {
+  var track   = document.getElementById('fip_geo_'+seg+'_toggle_track');
+  var thumb   = document.getElementById('fip_geo_'+seg+'_toggle_thumb');
+  var label   = document.getElementById('fip_geo_'+seg+'_toggle_label');
+  var section = document.getElementById('fip_geo_'+seg+'_section');
+  var isOn = label.textContent !== 'Yes';
+  if (isOn) {
+    track.style.background='var(--accent)'; thumb.style.left='18px';
+    label.textContent='Yes'; label.style.color='var(--accent)';
+    section.style.display='';
+    populateGeoStateDropdown(seg); renderGeoRows(seg);
+  } else {
+    track.style.background='#ddd'; thumb.style.left='2px';
+    label.textContent='No'; label.style.color='var(--cat-d)';
+    section.style.display='none';
+  }
+}
+
+function setGeoToggle(seg, enabled) {
+  var track   = document.getElementById('fip_geo_'+seg+'_toggle_track');
+  var thumb   = document.getElementById('fip_geo_'+seg+'_toggle_thumb');
+  var label   = document.getElementById('fip_geo_'+seg+'_toggle_label');
+  var section = document.getElementById('fip_geo_'+seg+'_section');
+  if (!track) return;
+  if (enabled) {
+    track.style.background='var(--accent)'; thumb.style.left='18px';
+    label.textContent='Yes'; label.style.color='var(--accent)';
+    section.style.display=''; populateGeoStateDropdown(seg); renderGeoRows(seg);
+  } else {
+    track.style.background='#ddd'; thumb.style.left='2px';
+    label.textContent='No'; label.style.color='var(--cat-d)';
+    section.style.display='none';
+  }
+}
+
+function populateGeoStateDropdown(seg) {
+  var sel = document.getElementById('fip_geo_'+seg+'_state');
+  if (!sel) return;
+  var states = Array.from(new Set((state.dealersMaster||[]).map(function(d){return d.state;}).filter(Boolean))).sort();
+  sel.innerHTML = '<option value="">— Select State —</option>' +
+    states.map(function(s){ return '<option value="'+escHtml(s)+'">'+escHtml(s)+'</option>'; }).join('');
+  updateGeoCityDropdown(seg);
+}
+
+function updateGeoCityDropdown(seg) {
+  var stateSel = document.getElementById('fip_geo_'+seg+'_state');
+  var citySel  = document.getElementById('fip_geo_'+seg+'_city');
+  if (!stateSel || !citySel) return;
+  var selState = stateSel.value;
+  var cities = Array.from(new Set((state.dealersMaster||[])
+    .filter(function(d){ return d.state === selState; })
+    .map(function(d){ return d.location; }).filter(Boolean))).sort();
+  citySel.innerHTML = '<option value="">— Select City —</option>' +
+    cities.map(function(c){ return '<option value="'+escHtml(c)+'">'+escHtml(c)+'</option>'; }).join('');
+}
+
+function geoRowKey(seg, st, ci) { return seg + '||' + st + '||' + ci; }
+
+function findGeoRow(seg, st, ci) {
+  var ctx = fiPolicyContext;
+  return (state.fiPolicyGeo||[]).find(function(r){
+    return r.financier===ctx.fiName && r.productKey===ctx.productKey &&
+           r.seg===seg && r.state===st && r.city===ci;
+  });
+}
+
+function findGeoRowIdx(seg, st, ci) {
+  var ctx = fiPolicyContext;
+  return (state.fiPolicyGeo||[]).findIndex(function(r){
+    return r.financier===ctx.fiName && r.productKey===ctx.productKey &&
+           r.seg===seg && r.state===st && r.city===ci;
+  });
+}
+
+function getGeoFieldDefs(seg) {
+  return seg === 'ind' ? [
+    { key:'minCibil',     label:'Min CIBIL',            type:'number' },
+    { key:'maxTenure',    label:'Max Tenure (months)',  type:'number' },
+    { key:'loanOn',       label:'Loan On',              type:'select', opts:['ESP','ORP','Either'] },
+    { key:'loanAmtType',  label:'Max Loan Amount Type', type:'select', opts:['Percentage','Absolute','Both'] },
+    { key:'maxLoanPct',   label:'Max Loan (%)',         type:'number' },
+    { key:'maxLoan',      label:'Max Loan (₹)',         type:'number' },
+    { key:'minIrr',       label:'Min IRR (%)',          type:'number' },
+    { key:'flexibility',  label:'Flexibility',          type:'select', opts:['NA','Low','Medium','High'] },
+    { key:'ntc',          label:'NTC Loan',             type:'select', opts:['Yes','No'] },
+    { key:'ftu',          label:'FTU Loan',             type:'select', opts:['Yes','No'] },
+    { key:'ftb',          label:'FTB Loan',             type:'select', opts:['Yes','No'] },
+    { key:'residence',    label:'Residence Criteria',   type:'text' },
+    { key:'guarantor',    label:'Guarantor Required',   type:'select', opts:['Yes','No','Either Scenario'] },
+    { key:'bankStatement',label:'Bank Statement',       type:'select', opts:['Yes','No','Either Scenario'] },
+    { key:'licenseType',  label:'License Type',         type:'text' },
+    { key:'remarks',      label:'Remarks',              type:'textarea' },
+  ] : [
+    { key:'maxTenure',   label:'Max Tenure (months)',   type:'number' },
+    { key:'loanOn',      label:'Loan On',               type:'select', opts:['ESP','ORP','Either'] },
+    { key:'loanAmtType', label:'Max Loan Amount Type',  type:'select', opts:['Percentage','Absolute','Both'] },
+    { key:'maxLoanPct',  label:'Max Loan (%)',          type:'number' },
+    { key:'maxLoan',     label:'Max Loan (₹)',          type:'number' },
+    { key:'minIrr',      label:'Min IRR (%)',           type:'number' },
+    { key:'vintage',     label:'Vintage (years)',       type:'number' },
+    { key:'flexibility', label:'Flexibility',           type:'select', opts:['NA','Low','Medium','High'] },
+    { key:'ntc',         label:'NTC Loan',              type:'select', opts:['Yes','No'] },
+    { key:'itr',         label:'ITR Filed',             type:'select', opts:['Yes','No'] },
+    { key:'remarks',     label:'Remarks',               type:'textarea' },
+  ];
+}
+
+function makeGeoValInput(type, opts, id, val, placeholder) {
+  if (type === 'select') {
+    return '<select class="form-select" id="'+id+'" style="font-size:12px;padding:5px 8px;">' +
+      '<option value="">— Select —</option>' +
+      opts.map(function(o){ return '<option value="'+escHtml(o)+'"'+(o===val?' selected':'')+'>'+escHtml(o)+'</option>'; }).join('') +
+      '</select>';
+  } else if (type === 'textarea') {
+    return '<textarea class="form-select" id="'+id+'" rows="2" style="font-size:12px;padding:5px 8px;resize:vertical;" placeholder="'+escHtml(placeholder||'')+'">'+escHtml(val||'')+'</textarea>';
+  } else {
+    return '<input type="'+(type==='number'?'number':'text')+'" class="form-select" id="'+id+'" value="'+escHtml(val||'')+'" placeholder="'+escHtml(placeholder||'')+'" style="font-size:12px;padding:5px 8px;" '+(type==='number'?'min="0"':'')+' >';
+  }
+}
+
+function addGeoOverrideRow(seg) {
+  var stateSel = document.getElementById('fip_geo_'+seg+'_state');
+  var citySel  = document.getElementById('fip_geo_'+seg+'_city');
+  if (!stateSel || !citySel) return;
+  var st = stateSel.value, ci = citySel.value;
+  if (!st || !ci) { toast('⚠ Please select both state and city.'); return; }
+  var ctx = fiPolicyContext;
+  if (findGeoRow(seg, st, ci)) { toast('⚠ Override for '+st+' / '+ci+' already exists.'); return; }
+  state.fiPolicyGeo.push({ financier: ctx.fiName, productKey: ctx.productKey, seg: seg, state: st, city: ci });
+  renderGeoRows(seg);
+  // Auto-expand new row
+  setTimeout(function(){
+    var el = document.getElementById('geo_row_'+seg+'_'+st+'_'+ci+'_body');
+    if (el) el.classList.add('open');
+  }, 60);
+  stateSel.value = ''; updateGeoCityDropdown(seg);
+}
+
+function deleteGeoRow(seg, st, ci) {
+  var idx = findGeoRowIdx(seg, st, ci);
+  if (idx === -1) return;
+  var ctx = fiPolicyContext;
+  state.fiPolicyGeo.splice(idx, 1);
+  setSaveStatus('saving');
+  API.delete('/api/fi_policy_geo?financier='+encodeURIComponent(ctx.fiName)+
+    '&productKey='+encodeURIComponent(ctx.productKey)+
+    '&seg='+encodeURIComponent(seg)+
+    '&state='+encodeURIComponent(st)+'&city='+encodeURIComponent(ci))
+    .then(function(){ setSaveStatus('saved'); }).catch(function(){ setSaveStatus('error'); });
+  renderGeoRows(seg);
+  toast('Override deleted: '+st+' / '+ci);
+}
+
+function renderGeoRows(seg) {
+  var ctx = fiPolicyContext;
+  var container = document.getElementById('fip_geo_'+seg+'_rows_container');
+  if (!container) return;
+  var rows = (state.fiPolicyGeo||[]).filter(function(r){
+    return r.financier===ctx.fiName && r.productKey===ctx.productKey && r.seg===seg;
+  });
+  if (!rows.length) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--text-hint);padding:8px 0;">No overrides defined yet. Select a state and city above.</div>';
+    return;
+  }
+  container.innerHTML = rows.map(function(r) {
+    var rid = 'geo_row_'+seg+'_'+r.state+'_'+r.city;
+    var setFields = getGeoFieldDefs(seg).filter(function(f){ return r.hasOwnProperty('seg_'+f.key); });
+    var availFields = getGeoFieldDefs(seg).filter(function(f){ return !r.hasOwnProperty('seg_'+f.key); });
+
+    // Defined properties list
+    var propsHtml = setFields.length ?
+      setFields.map(function(f) {
+        var val = r['seg_'+f.key]||'';
+        var editId  = 'geo_edit_'+seg+'_'+r.state+'_'+r.city+'_'+f.key;
+        var viewId  = 'geo_view_'+seg+'_'+r.state+'_'+r.city+'_'+f.key;
+        var editInput = makeGeoValInput(f.type, f.opts||[], editId+'_input', val, 'Enter value');
+        return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">' +
+          '<div style="width:145px;font-size:11px;color:var(--text-muted);flex-shrink:0;">'+escHtml(f.label)+'</div>' +
+          '<div id="'+viewId+'" style="flex:1;font-size:12px;font-weight:500;padding:4px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;">'+escHtml(val||'—')+'</div>' +
+          '<div id="'+editId+'" style="flex:1;display:none;">'+editInput+'</div>' +
+          '<div style="display:flex;gap:3px;">' +
+            '<button onclick="geoToggleEdit(\''+escJs(seg)+'\',\''+escJs(r.state)+'\',\''+escJs(r.city)+'\',\''+escJs(f.key)+'\')" id="'+editId+'_btn" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--accent);cursor:pointer;font-size:10px;padding:2px 6px;">✏</button>' +
+            '<button onclick="geoSaveEdit(\''+escJs(seg)+'\',\''+escJs(r.state)+'\',\''+escJs(r.city)+'\',\''+escJs(f.key)+'\')" id="'+editId+'_save" style="background:var(--accent);border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:10px;padding:2px 6px;display:none;">✓</button>' +
+            '<button onclick="geoRemoveProp(\''+escJs(seg)+'\',\''+escJs(r.state)+'\',\''+escJs(r.city)+'\',\''+escJs(f.key)+'\')" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--flag);cursor:pointer;font-size:10px;padding:2px 6px;">✕</button>' +
+          '</div>' +
+        '</div>';
+      }).join('') :
+      '<div style="font-size:12px;color:var(--text-hint);margin-bottom:8px;">No properties added yet.</div>';
+
+    // Add new property row
+    var addHtml = availFields.length ? (
+      '<div style="border-top:1px dashed var(--border);margin-top:10px;padding-top:10px;">' +
+        '<div style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Add Property Override</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:flex-end;">' +
+          '<div>' +
+            '<label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:3px;">Property</label>' +
+            '<select class="form-select" id="geo_addprop_'+seg+'_'+r.state+'_'+r.city+'" onchange="geoUpdateValInput(\''+escJs(seg)+'\',\''+escJs(r.state)+'\',\''+escJs(r.city)+'\')" style="font-size:12px;padding:5px 8px;">' +
+              '<option value="">— Select —</option>' +
+              availFields.map(function(f){ return '<option value="'+escHtml(f.key)+'" data-type="'+escHtml(f.type)+'" data-opts="'+escHtml((f.opts||[]).join('|'))+'">'+escHtml(f.label)+'</option>'; }).join('') +
+            '</select>' +
+          '</div>' +
+          '<div id="geo_addval_wrap_'+seg+'_'+r.state+'_'+r.city+'">' +
+            '<label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:3px;">Value</label>' +
+            '<input type="text" class="form-select" id="geo_addval_'+seg+'_'+r.state+'_'+r.city+'" placeholder="Select property first" disabled style="font-size:12px;padding:5px 8px;">' +
+          '</div>' +
+          '<button class="btn btn-primary btn-sm" onclick="geoAddProp(\''+escJs(seg)+'\',\''+escJs(r.state)+'\',\''+escJs(r.city)+'\')" style="font-size:11px;padding:6px 12px;">+ Add</button>' +
+        '</div>' +
+      '</div>'
+    ) : '<div style="font-size:11px;color:var(--text-hint);margin-top:6px;border-top:1px dashed var(--border);padding-top:8px;">All properties defined.</div>';
+
+    return '<div class="geo-row" id="'+rid+'">' +
+      '<div class="geo-row-header" onclick="document.getElementById(\''+rid+'_body\').classList.toggle(\'open\')">' +
+        '<span style="font-size:13px;font-weight:600;">'+escHtml(r.state)+' — '+escHtml(r.city)+'</span>' +
+        '<div style="display:flex;gap:8px;align-items:center;">' +
+          (setFields.length ? '<span style="font-size:11px;color:var(--accent);">'+setFields.length+' override'+(setFields.length>1?'s':'')+' defined</span>' : '<span style="font-size:11px;color:var(--text-hint);">No overrides yet</span>') +
+          '<button class="btn btn-danger btn-sm" style="font-size:11px;padding:2px 8px;" onclick="event.stopPropagation();deleteGeoRow(\''+escJs(seg)+'\',\''+escJs(r.state)+'\',\''+escJs(r.city)+'\')">Delete</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="geo-row-body" id="'+rid+'_body">' +
+        propsHtml + addHtml +
+        '<div style="text-align:right;margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">' +
+          '<button class="btn btn-primary btn-sm" onclick="saveGeoRow(\''+escJs(seg)+'\',\''+escJs(r.state)+'\',\''+escJs(r.city)+'\')">💾 Save Override</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function geoUpdateValInput(seg, st, ci) {
+  var propSel = document.getElementById('geo_addprop_'+seg+'_'+st+'_'+ci);
+  var valWrap = document.getElementById('geo_addval_wrap_'+seg+'_'+st+'_'+ci);
+  if (!propSel || !valWrap) return;
+  var opt = propSel.options[propSel.selectedIndex];
+  if (!opt || !opt.value) {
+    valWrap.innerHTML = '<label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:3px;">Value</label><input type="text" class="form-select" id="geo_addval_'+seg+'_'+st+'_'+ci+'" placeholder="Select property first" disabled style="font-size:12px;padding:5px 8px;">';
+    return;
+  }
+  var type = opt.getAttribute('data-type')||'text';
+  var opts = (opt.getAttribute('data-opts')||'').split('|').filter(Boolean);
+  var label = escHtml(opt.textContent||'');
+  var inputHtml = makeGeoValInput(type, opts, 'geo_addval_'+seg+'_'+st+'_'+ci, '', 'Enter '+opt.textContent);
+  valWrap.innerHTML = '<label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:3px;">Value</label>' + inputHtml;
+  var inp = valWrap.querySelector('input,select,textarea');
+  if (inp) inp.focus();
+}
+
+function geoAddProp(seg, st, ci) {
+  var propSel = document.getElementById('geo_addprop_'+seg+'_'+st+'_'+ci);
+  var valEl   = document.getElementById('geo_addval_'+seg+'_'+st+'_'+ci);
+  if (!propSel || !propSel.value) { toast('⚠ Select a property first.'); return; }
+  var propKey = propSel.value;
+  var propVal = valEl ? (valEl.value||'').trim() : '';
+  if (!propVal) { toast('⚠ Enter a value for the selected property.'); if (valEl) valEl.focus(); return; }
+
+  // Check same as base
+  var ctx = fiPolicyContext;
+  var baseVal = String(((state.fiPolicy[ctx.fiName]||{})[ctx.productKey]||{})[seg] && ((state.fiPolicy[ctx.fiName]||{})[ctx.productKey]||{})[seg][propKey] || '').trim();
+  if (baseVal && propVal === baseVal) {
+    var fld = getGeoFieldDefs(seg).find(function(f){ return f.key===propKey; });
+    toast('⚠ "' + (fld?fld.label:propKey) + '" value ('+propVal+') is same as base policy. Enter a different value.');
+    if (valEl) valEl.focus();
+    return;
+  }
+
+  var idx = findGeoRowIdx(seg, st, ci);
+  if (idx === -1) return;
+  state.fiPolicyGeo[idx]['seg_'+propKey] = propVal;
+  renderGeoRows(seg);
+  setTimeout(function(){
+    var el = document.getElementById('geo_row_'+seg+'_'+st+'_'+ci+'_body');
+    if (el) el.classList.add('open');
+  }, 60);
+}
+
+function geoToggleEdit(seg, st, ci, propKey) {
+  var viewEl  = document.getElementById('geo_view_'+seg+'_'+st+'_'+ci+'_'+propKey);
+  var editEl  = document.getElementById('geo_edit_'+seg+'_'+st+'_'+ci+'_'+propKey);
+  var editBtn = document.getElementById('geo_edit_'+seg+'_'+st+'_'+ci+'_'+propKey+'_btn');
+  var saveBtn = document.getElementById('geo_edit_'+seg+'_'+st+'_'+ci+'_'+propKey+'_save');
+  if (!viewEl || !editEl) return;
+  var isEditing = editEl.style.display !== 'none';
+  if (isEditing) {
+    viewEl.style.display=''; editEl.style.display='none';
+    if (editBtn) editBtn.style.display=''; if (saveBtn) saveBtn.style.display='none';
+  } else {
+    viewEl.style.display='none'; editEl.style.display='';
+    if (editBtn) editBtn.style.display='none'; if (saveBtn) saveBtn.style.display='';
+    var inp = editEl.querySelector('input,select,textarea');
+    if (inp) inp.focus();
+  }
+}
+
+function geoSaveEdit(seg, st, ci, propKey) {
+  var editEl  = document.getElementById('geo_edit_'+seg+'_'+st+'_'+ci+'_'+propKey);
+  var viewEl  = document.getElementById('geo_view_'+seg+'_'+st+'_'+ci+'_'+propKey);
+  var editBtn = document.getElementById('geo_edit_'+seg+'_'+st+'_'+ci+'_'+propKey+'_btn');
+  var saveBtn = document.getElementById('geo_edit_'+seg+'_'+st+'_'+ci+'_'+propKey+'_save');
+  if (!editEl) return;
+  var inp = editEl.querySelector('input,select,textarea');
+  if (!inp) return;
+  var newVal = (inp.value||'').trim();
+  if (!newVal) { toast('⚠ Enter a value.'); inp.focus(); return; }
+
+  // Check same as base
+  var ctx = fiPolicyContext;
+  var baseVal = String(((state.fiPolicy[ctx.fiName]||{})[ctx.productKey]||{})[seg] && ((state.fiPolicy[ctx.fiName]||{})[ctx.productKey]||{})[seg][propKey] || '').trim();
+  if (baseVal && newVal === baseVal) {
+    var fld = getGeoFieldDefs(seg).find(function(f){ return f.key===propKey; });
+    toast('⚠ "' + (fld?fld.label:propKey) + '" value ('+newVal+') is same as base policy. Enter a different value.');
+    inp.focus(); return;
+  }
+
+  var idx = findGeoRowIdx(seg, st, ci);
+  if (idx > -1) state.fiPolicyGeo[idx]['seg_'+propKey] = newVal;
+  if (viewEl) viewEl.textContent = newVal;
+  viewEl.style.display=''; editEl.style.display='none';
+  if (editBtn) editBtn.style.display=''; if (saveBtn) saveBtn.style.display='none';
+  toast('Property updated.');
+}
+
+function geoRemoveProp(seg, st, ci, propKey) {
+  var idx = findGeoRowIdx(seg, st, ci);
+  if (idx === -1) return;
+  delete state.fiPolicyGeo[idx]['seg_'+propKey];
+  renderGeoRows(seg);
+  setTimeout(function(){
+    var el = document.getElementById('geo_row_'+seg+'_'+st+'_'+ci+'_body');
+    if (el) el.classList.add('open');
+  }, 60);
+}
+
+function saveGeoRow(seg, st, ci) {
+  var ctx = fiPolicyContext;
+  var idx = findGeoRowIdx(seg, st, ci);
+  if (idx === -1) { toast('⚠ Override row not found. Try reopening the modal.'); return; }
+  var r = state.fiPolicyGeo[idx];
+  var allFields = getGeoFieldDefs(seg);
+  var baseSegPol = ((state.fiPolicy[ctx.fiName]||{})[ctx.productKey]||{})[seg]||{};
+
+  // Validation 1: at least one property
+  var addedProps = allFields.filter(function(f){ return r.hasOwnProperty('seg_'+f.key); });
+  if (!addedProps.length) { toast('⚠ Add at least one property override before saving.'); return; }
+
+  // Validation 2: all added props have non-empty values
+  var emptyProps = addedProps.filter(function(f){ return !(r['seg_'+f.key]||'').trim(); });
+  if (emptyProps.length) {
+    toast('⚠ Missing values for: ' + emptyProps.map(function(f){ return f.label; }).join(', '));
+    return;
+  }
+
+  // Validation 3: no value same as base
+  var sameProps = addedProps.filter(function(f){
+    var bv = String(baseSegPol[f.key]||'').trim();
+    return bv && (r['seg_'+f.key]||'').trim() === bv;
+  });
+  if (sameProps.length) {
+    toast('⚠ Same as base policy: ' + sameProps.map(function(f){ return '"'+f.label+'"'; }).join(', ') + '. Enter different values or remove them.');
+    return;
+  }
+
+  setSaveStatus('saving');
+  API.post('/api/fi_policy_geo', r)
+    .then(function(){ setSaveStatus('saved'); toast('✅ Override saved: '+st+' / '+ci); })
+    .catch(function(){ setSaveStatus('error'); });
+}
+
+function setGeoSectionEditable(seg, editable) {
+  var section = document.getElementById('fip_geo_'+seg+'_section');
+  var track   = document.getElementById('fip_geo_'+seg+'_toggle_track');
+  var stateEl = document.getElementById('fip_geo_'+seg+'_state');
+  var cityEl  = document.getElementById('fip_geo_'+seg+'_city');
+  var opacity = editable ? '1' : '0.45';
+  var pEvents = editable ? '' : 'none';
+  if (track)   { track.style.opacity=opacity; track.style.pointerEvents=pEvents; track.style.cursor=editable?'pointer':'not-allowed'; }
+  if (stateEl) stateEl.disabled = !editable;
+  if (cityEl)  cityEl.disabled  = !editable;
+  if (section) {
+    section.querySelectorAll('button').forEach(function(btn){ btn.disabled=!editable; btn.style.opacity=editable?'1':'0.4'; });
+    section.querySelectorAll('input,select,textarea').forEach(function(el){ el.disabled=!editable; });
+  }
+}
+
+function initGeoSection(fiName, productKey) {
+  ['ind','co'].forEach(function(seg) {
+    var hasGeo = (state.fiPolicyGeo||[]).some(function(r){
+      return r.financier===fiName && r.productKey===productKey && r.seg===seg;
+    });
+    setGeoToggle(seg, hasGeo);
+  });
 }
 
 // ══════════════════════════════════════════════════════════════

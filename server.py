@@ -34,6 +34,7 @@ def create_session():
     return token
 
 def validate_session(token):
+    if SESSION_TTL == 0: return True  # dev mode: disable auth
     if not token: return False
     with _session_lock:
         exp = _sessions.get(token)
@@ -81,7 +82,23 @@ def ws(title):
     return get_sheet().worksheet(title)
 
 def rows_to_dicts(worksheet):
-    return worksheet.get_all_records() or []
+    try:
+        return worksheet.get_all_records(default_blank="") or []
+    except Exception as e:
+        print(f"  ⚠ rows_to_dicts error ({worksheet.title}): {e} — falling back to manual parse")
+        try:
+            all_vals = worksheet.get_all_values()
+            if not all_vals: return []
+            headers = all_vals[0]
+            result = []
+            for row in all_vals[1:]:
+                if not any(row): continue
+                padded = row + [''] * (len(headers) - len(row))
+                result.append(dict(zip(headers, padded)))
+            return result
+        except Exception as e2:
+            print(f"  ❌ rows_to_dicts fallback error ({worksheet.title}): {e2}")
+            return []
 
 def upsert_row(worksheet, match_keys, data_dict):
     headers = worksheet.row_values(1)
@@ -120,6 +137,9 @@ def api_save_onboarding(d):     upsert_row(ws("FI_Onboarding"),  {"dealer": d["d
 def api_delete_onboarding(d, l, f): delete_row(ws("FI_Onboarding"), {"dealer": d, "location": l, "financier": f})
 def api_save_fi_policy(d):      upsert_row(ws("FI_Policy"),      {"financier": d["financier"], "productKey": d["productKey"]}, d)
 def api_save_dealer_health(d):  upsert_row(ws("Dealer_Health"),  {"dealer": d["dealer"], "location": d["location"]}, d)
+def api_get_fi_policy_geo():     return rows_to_dicts(ws("FI_Policy_Geo")) or []
+def api_save_fi_policy_geo(d):  upsert_row(ws("FI_Policy_Geo"), {"financier": d["financier"], "productKey": d["productKey"], "seg": d["seg"], "state": d["state"], "city": d["city"]}, d)
+def api_delete_fi_policy_geo(fi, pk, seg, state, city): delete_row(ws("FI_Policy_Geo"), {"financier": fi, "productKey": pk, "seg": seg, "state": state, "city": city})
 def api_get_taif():             return rows_to_dicts(ws("TA_IF_Status")) or []
 def api_save_taif(d):           upsert_row(ws("TA_IF_Status"), {"dealerCode": d["dealerCode"], "city": d["city"]}, d)
 def api_delete_taif(dealer_code, city): delete_row(ws("TA_IF_Status"), {"dealerCode": dealer_code, "city": city})
@@ -139,7 +159,7 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Access-Control-Allow-Origin",  "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Session-Token")
         self.end_headers()
         self.wfile.write(body)
 
@@ -147,7 +167,7 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin",  "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Session-Token")
         self.end_headers()
 
     def read_body(self):
@@ -156,19 +176,27 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
+        # Suppress favicon silently
+        if path == '/favicon.ico':
+            self.send_response(204)
+            self.end_headers()
+            return
         # ── API routes ──────────────────────────────────────
         if path.startswith("/api/"):
             try:
-                if path not in ("/api/login",):
+                if path not in ("/api/login", "/api/ping"):
                     token = self.headers.get("X-Session-Token","")
                     if not validate_session(token):
                         self.send_json(401, {"error": "Unauthorized"}); return
-                if   path == "/api/fi_master":      self.send_json(200, api_get("FI_Master"))
+                if   path == "/api/ping":
+                    self.send_json(200, {"ok": True, "login_id_set": bool(os.environ.get("LOGIN_ID")), "sessions_active": len(_sessions)})
+                elif path == "/api/fi_master":      self.send_json(200, api_get("FI_Master"))
                 elif path == "/api/dealer_master":  self.send_json(200, api_get("Dealer_Master"))
                 elif path == "/api/added_dealers":  self.send_json(200, api_get("Added_Dealers"))
                 elif path == "/api/onboarding":     self.send_json(200, api_get("FI_Onboarding"))
                 elif path == "/api/fi_policy":      self.send_json(200, api_get("FI_Policy"))
                 elif path == "/api/dealer_health":  self.send_json(200, api_get("Dealer_Health"))
+                elif path == "/api/fi_policy_geo":   self.send_json(200, api_get_fi_policy_geo())
                 elif path == "/api/taif":             self.send_json(200, api_get_taif())
                 else:                               self.send_json(404, {"error": f"Unknown: {path}"})
             except Exception as e:
@@ -205,6 +233,7 @@ class Handler(SimpleHTTPRequestHandler):
             elif path == "/api/onboarding":    api_save_onboarding(body)
             elif path == "/api/fi_policy":     api_save_fi_policy(body)
             elif path == "/api/dealer_health": api_save_dealer_health(body)
+            elif path == "/api/fi_policy_geo":   api_save_fi_policy_geo(body)
             elif path == "/api/taif":             api_save_taif(body)
             else: self.send_json(404, {"error": f"Unknown: {path}"}); return
             self.send_json(200, {"ok": True})
@@ -224,6 +253,7 @@ class Handler(SimpleHTTPRequestHandler):
             elif path == "/api/dealer_master": api_delete_dealer_master(q("dealerName"), q("location"))
             elif path == "/api/added_dealers": api_delete_added_dealer(q("dealer"), q("location"))
             elif path == "/api/onboarding":    api_delete_onboarding(q("dealer"), q("location"), q("financier"))
+            elif path == "/api/fi_policy_geo":   api_delete_fi_policy_geo(q("financier"), q("productKey"), q("seg"), q("state"), q("city"))
             elif path == "/api/taif":             api_delete_taif(q("dealerCode"), q("city"))
             else: self.send_json(404, {"error": f"Unknown: {path}"}); return
             self.send_json(200, {"ok": True})
