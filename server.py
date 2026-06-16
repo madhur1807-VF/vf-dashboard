@@ -5,7 +5,7 @@ Local:   python server.py
 Railway: auto-started via Procfile
 """
 
-import json, os, threading, traceback, secrets, time
+import json, os, threading, traceback, secrets, time, random
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
@@ -78,18 +78,30 @@ def get_sheet():
             print(f"  ✅ Connected to Google Sheet: {_sh.title}")
     return _sh
 
+def with_retry(fn, retries=5):
+    """Call fn(), retrying on 429 rate limit errors with exponential backoff."""
+    for attempt in range(retries):
+        try:
+            return fn()
+        except Exception as e:
+            if '429' in str(e) and attempt < retries - 1:
+                wait = (2 ** attempt) + random.uniform(0, 1)
+                print(f"  ⚠ Rate limited — retrying in {wait:.1f}s (attempt {attempt+1}/{retries})")
+                time.sleep(wait)
+            else:
+                raise
+
 def ws(title):
-    return get_sheet().worksheet(title)
+    return with_retry(lambda: get_sheet().worksheet(title))
 
 def rows_to_dicts(worksheet):
     try:
-        # Pass expected_headers to handle any remaining duplicate columns gracefully
-        headers = worksheet.row_values(1)
-        return worksheet.get_all_records(expected_headers=headers, default_blank="") or []
+        headers = with_retry(lambda: worksheet.row_values(1))
+        return with_retry(lambda: worksheet.get_all_records(expected_headers=headers, default_blank="")) or []
     except Exception as e:
         print(f"  ⚠ rows_to_dicts error ({worksheet.title}): {e} — falling back to manual parse")
         try:
-            all_vals = worksheet.get_all_values()
+            all_vals = with_retry(lambda: worksheet.get_all_values())
             if not all_vals: return []
             headers = all_vals[0]
             result = []
@@ -116,29 +128,33 @@ def rows_to_dicts(worksheet):
             return []
 
 def upsert_row(worksheet, match_keys, data_dict):
-    headers = worksheet.row_values(1)
-    all_vals = worksheet.get_all_values()
-    row_idx = None
-    for i, row in enumerate(all_vals[1:], start=2):
-        if all((row[headers.index(k)] if k in headers and headers.index(k) < len(row) else "") == str(v)
-               for k, v in match_keys.items()):
-            row_idx = i
-            break
-    row_data = [str(data_dict.get(h, "")) for h in headers]
-    if row_idx:
-        worksheet.update(f"A{row_idx}", [row_data])
-    else:
-        worksheet.append_row(row_data)
+    def _do():
+        headers = worksheet.row_values(1)
+        all_vals = worksheet.get_all_values()
+        row_idx = None
+        for i, row in enumerate(all_vals[1:], start=2):
+            if all((row[headers.index(k)] if k in headers and headers.index(k) < len(row) else "") == str(v)
+                   for k, v in match_keys.items()):
+                row_idx = i
+                break
+        row_data = [str(data_dict.get(h, "")) for h in headers]
+        if row_idx:
+            worksheet.update(range_name=f"A{row_idx}", values=[row_data])
+        else:
+            worksheet.append_row(row_data)
+    with_retry(_do)
 
 def delete_row(worksheet, match_keys):
-    headers = worksheet.row_values(1)
-    all_vals = worksheet.get_all_values()
-    for i, row in enumerate(all_vals[1:], start=2):
-        if all((row[headers.index(k)] if k in headers and headers.index(k) < len(row) else "") == str(v)
-               for k, v in match_keys.items()):
-            worksheet.delete_rows(i)
-            return True
-    return False
+    def _do():
+        headers = worksheet.row_values(1)
+        all_vals = worksheet.get_all_values()
+        for i, row in enumerate(all_vals[1:], start=2):
+            if all((row[headers.index(k)] if k in headers and headers.index(k) < len(row) else "") == str(v)
+                   for k, v in match_keys.items()):
+                worksheet.delete_rows(i)
+                return True
+        return False
+    return with_retry(_do)
 
 # ── API FUNCTIONS ─────────────────────────────────────────────
 def api_get(sheet_name):        return rows_to_dicts(ws(sheet_name))

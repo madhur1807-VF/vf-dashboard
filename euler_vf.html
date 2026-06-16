@@ -1926,7 +1926,8 @@ async function saveFIPolicyToSheet(fiName, productKey) {
 }
 
 async function saveDealerHealthToSheet(dealer, location) {
-  const h = state.dealerHealth[dealer]||{};
+  const hk = dealerKey(dealer, location||'');
+  const h = state.dealerHealth[hk] || state.dealerHealth[dealer] || {};
   const row = { dealer, location, '3wc': h['3wc']||'', '3wp': h['3wp']||'', '4wc_storm': h['4wc_storm']||'', '4wc_turbo': h['4wc_turbo']||'' };
   setSaveStatus('saving');
   try { await API.post('/api/dealer_health', row); setSaveStatus('saved'); } catch(e) { setSaveStatus('error'); }
@@ -2370,8 +2371,8 @@ function saveFinancier() {
   if (!state.mapping[dk]) state.mapping[dk] = {};
   state.mapping[dk][finName] = { products };
   closeModal();
-  openDealerCards.add(dealerName);
-  const loc = (state.addedDealers.find(d=>d.dealer===dealerName)||{}).location||"";
+  openDealerCards.add(dealerKey(dealerName, dkLoc));
+  const loc = dkLoc;
   saveOnboarding(dealerName, loc, finName);
   renderAll();
   toast(editFinancier ? finName+" updated." : finName+" added to "+dealerName+".");
