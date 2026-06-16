@@ -2277,6 +2277,30 @@ function toggleFinRow(dealerName, finName) {
 }
 
 // ── MODAL ────────────────────────────────────────────────────
+function autoCheckFIProducts(fiName) {
+  if (!fiName) return;
+  const meta = state.financiersMeta.find(m => m.name === fiName);
+  if (!meta) return;
+  // Map FI Master product keys to product keys used in the dashboard
+  const PRODUCT_META_MAP = { '3wc': '3wc', '3wp': '3wp', '4wc': '4wc_storm', '4wct': '4wc_turbo' };
+  PRODUCTS.forEach(function(p) {
+    // Find the corresponding FI Master key
+    const metaKey = Object.keys(PRODUCT_META_MAP).find(k => PRODUCT_META_MAP[k] === p.key);
+    if (!metaKey) return;
+    const offersProduct = meta[metaKey] === 'Y' || meta[metaKey] === true || meta[metaKey] === 1 ||
+                          String(meta[metaKey]||'').toUpperCase() === 'TRUE';
+    const cb = document.getElementById('pen_'+p.key);
+    if (!cb) return;
+    if (offersProduct && !cb.checked) {
+      cb.checked = true;
+      toggleProductRow(p.key);
+    } else if (!offersProduct && cb.checked) {
+      cb.checked = false;
+      toggleProductRow(p.key);
+    }
+  });
+}
+
 function buildProductConfigHTML(existingProducts) {
   return PRODUCTS.map(p => {
     const pd = existingProducts ? existingProducts[p.key] : null;
@@ -2318,12 +2342,18 @@ function openAddModal(dealerName, dealerLocation) {
   document.getElementById("modalSub").textContent = dealerName;
   document.getElementById("finSelectGroup").style.display = "block";
   document.getElementById("modalSaveBtn").textContent = "Add Financier";
-  document.getElementById("finSelect").innerHTML = available.map(f => {
+  document.getElementById("finSelect").innerHTML =
+    '<option value="">— Select Financier —</option>' +
+    available.map(f => {
     const meta = state.financiersMeta.find(m => m.name === f);
     const status = meta ? meta.status : '';
     const isDiscussion = status.startsWith('Discussion');
     return `<option value="${escHtml(f)}" style="${isDiscussion ? 'color:#fbbf24;' : ''}">${escHtml(f)}${isDiscussion ? ' (' + escHtml(status) + ')' : ''}</option>`;
   }).join('');
+  // Auto-check products when FI is selected
+  document.getElementById("finSelect").onchange = function() {
+    if (this.value) autoCheckFIProducts(this.value);
+  };
   // Show/hide note about missing FIs
   const allFIsCount = state.financiers.filter(f => !existing.includes(f)).length;
   const hiddenCount = allFIsCount - available.length;
