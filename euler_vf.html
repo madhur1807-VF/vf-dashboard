@@ -669,6 +669,7 @@
       <option value="4wc_turbo|red">4WCT — 🔴 Red</option>
       <option value="4wc_turbo|na">4WCT — N/A</option>
     </select>
+    <select class="filter-select" id="filterVfPoc" onchange="renderDealers()"><option value="">All VF SPOCs</option></select>
     <button class="btn btn-secondary btn-sm" onclick="exportDealerDashboard()">⬇ Export Excel</button>
     <button class="btn btn-primary btn-sm" onclick="openStatsModal()">📊 Stats</button>
   </div>
@@ -2141,6 +2142,16 @@ function renderDealers() {
   const finF           = document.getElementById("filterFinancier").value;
   const healthF        = document.getElementById("filterHealth").value;
   const productHealthF = document.getElementById("filterProductHealth").value;
+  const vfPocF         = document.getElementById("filterVfPoc") ? document.getElementById("filterVfPoc").value : '';
+
+  // Populate VF SPOC dropdown dynamically from current addedDealers
+  const pocSel = document.getElementById("filterVfPoc");
+  if (pocSel) {
+    const pocs = [...new Set(state.addedDealers.map(d => d.vfPoc||'').filter(Boolean))].sort();
+    const curPoc = pocSel.value;
+    pocSel.innerHTML = '<option value="">All VF SPOCs</option>' +
+      pocs.map(function(p){ return '<option value="'+escHtml(p)+'"'+(p===curPoc?' selected':'')+'>'+escHtml(p)+'</option>'; }).join('');
+  }
   document.getElementById("addedCount").textContent = "("+state.addedDealers.length+"/"+getDealerMasterList().length+")";
   const grid = document.getElementById("dealerGrid");
   if (state.addedDealers.length === 0) {
@@ -2160,6 +2171,7 @@ function renderDealers() {
       const h = (state.dealerHealth[dealerKey(d.dealer,d.location||'')] || state.dealerHealth[d.dealer] || {})[prodKey] || 'na';
       if (h !== prodHealth) return false;
     }
+    if (vfPocF && (d.vfPoc||'') !== vfPocF) return false;
     return true;
   });
   if (!dealers.length) { grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div>No dealers match your filter.</div></div>'; return; }
