@@ -670,6 +670,7 @@
       <option value="4wc_turbo|na">4WCT — N/A</option>
     </select>
     <select class="filter-select" id="filterVfPoc" onchange="renderDealers()"><option value="">All VF SPOCs</option></select>
+    <button class="btn btn-secondary btn-sm" onclick="clearDealerFilters()">✕ Clear</button>
     <button class="btn btn-secondary btn-sm" onclick="exportDealerDashboard()">⬇ Export Excel</button>
     <button class="btn btn-primary btn-sm" onclick="openStatsModal()">📊 Stats</button>
   </div>
@@ -2618,6 +2619,16 @@ function toggleGapCard(dealerName, cardId) {
 // PAGE 3 — FINANCIER LIST MASTER
 // ══════════════════════════════════════════════════════════════
 
+function clearDealerFilters() {
+  document.getElementById('searchBox').value = '';
+  document.getElementById('filterFinancier').value = '';
+  document.getElementById('filterHealth').value = '';
+  document.getElementById('filterProductHealth').value = '';
+  var pocSel = document.getElementById('filterVfPoc');
+  if (pocSel) pocSel.value = '';
+  renderDealers();
+}
+
 function clearFIFilters() {
   document.getElementById("finMasterSearch").value = "";
   document.getElementById("finFilterStatus").value = "";
@@ -2971,12 +2982,20 @@ function renderDealerMaster() {
   // Summary
   const zones   = [...new Set(list.map(d=>d.zone).filter(Boolean))].length;
   const states  = [...new Set(list.map(d=>d.state).filter(Boolean))].length;
-  const retailing = list.filter(d=>d.dealerStatus==="Retailing").length;
+  // Status breakdown
+  const statusBreakdown = {};
+  list.forEach(function(d){ var s = d.dealerStatus||'Unknown'; statusBreakdown[s] = (statusBreakdown[s]||0)+1; });
+  const statusHtml = Object.keys(statusBreakdown).sort().map(function(s){
+    return '<span style="font-size:11px;margin-right:8px;white-space:nowrap;">' +
+      '<span style="font-weight:600;color:var(--text);">' + statusBreakdown[s] + '</span>' +
+      ' <span style="color:var(--text-muted);">' + escHtml(s) + '</span>' +
+    '</span>';
+  }).join('');
   document.getElementById("dealerMasterSummary").innerHTML =
     '<div class="sum-card"><div class="sum-label">Total Dealers</div><div class="sum-value">' + list.length + '</div><div class="sum-sub">in master list</div></div>' +
     '<div class="sum-card"><div class="sum-label">Zones</div><div class="sum-value">' + zones + '</div><div class="sum-sub">covered</div></div>' +
     '<div class="sum-card"><div class="sum-label">States</div><div class="sum-value">' + states + '</div><div class="sum-sub">covered</div></div>' +
-    '<div class="sum-card"><div class="sum-label">Retailing</div><div class="sum-value sum-ok">' + retailing + '</div><div class="sum-sub">active dealers</div></div>';
+    '<div class="sum-card" style="grid-column:span 2;"><div class="sum-label">By Status</div><div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">' + statusHtml + '</div></div>';
 
   if (!filtered.length) {
     document.getElementById("dealerMasterTable").innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div>No dealers match your filters.</div></div>';
