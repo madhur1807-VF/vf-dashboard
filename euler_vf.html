@@ -1169,6 +1169,32 @@
       </div>
     </div>
           </div>
+            <div class="form-group" style="margin:0;">
+      <label class="form-label">Existing CV Required <span style="color:var(--flag);">*</span></label>
+      <div id="fip_ind_existingCvRequired_view" class="fip-view-field" style="display:none;">No</div>
+      <div id="fip_ind_existingCvRequired_wrap" style="display:flex;align-items:center;gap:10px;padding:6px 0;">
+        <div id="fip_ind_existingCvRequired_label" style="font-size:12px;font-weight:600;color:var(--cat-d);">No</div>
+        <div id="fip_ind_existingCvRequired_track" onclick="toggleFIPYN('fip_ind_existingCvRequired')" style="width:36px;height:20px;border-radius:10px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
+          <div id="fip_ind_existingCvRequired_thumb" style="width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+        </div>
+      </div>
+    </div>
+          <!-- Existing CV Details (shown when existingCvRequired = Yes) -->
+          <div id="fip_ind_existingCvDetails" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px;">
+            <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Existing CV Criteria</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div class="form-group" style="margin:0;">
+                <label class="form-label">Min. CVs Owned <span style="color:var(--flag);">*</span></label>
+                <div id="fip_ind_existingCvCount_view" class="fip-view-field">—</div>
+                <input type="number" class="form-select" id="fip_ind_existingCvCount" placeholder="e.g. 2" style="display:none;" min="1">
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label class="form-label">Min. EV CVs (out of above) <span style="color:var(--flag);">*</span></label>
+                <div id="fip_ind_existingCvType_view" class="fip-view-field">—</div>
+                <input type="number" class="form-select" id="fip_ind_existingCvType" placeholder="e.g. 1 (0 = no EV req.)" style="display:none;" min="0" oninput="validateExistingCvEv(this)">
+              </div>
+            </div>
+          </div>
           <div class="form-group" style="margin-bottom:12px;">
             <label class="form-label">Flexibility <span style="color:var(--flag);">*</span></label>
             <div id="fip_ind_flexibility_view" class="fip-view-field">—</div>
@@ -1852,7 +1878,7 @@ async function loadState() {
       if (!row.financier || !row.productKey) return;
       if (!state.fiPolicy[row.financier]) state.fiPolicy[row.financier] = {};
       const pol = { ind_applicable: row.ind_applicable === 'true', co_applicable: row.co_applicable === 'true', ind: {}, co: {} };
-      ['minCibil','maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','flexibility','remarks'].forEach(k => { pol.ind[k] = row['ind_'+k]||''; });
+      ['minCibil','maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','existingCvRequired','existingCvCount','existingCvType','flexibility','remarks'].forEach(k => { pol.ind[k] = row['ind_'+k]||''; });
       ['maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','vintage','itr','flexibility','remarks'].forEach(k => { pol.co[k] = row['co_'+k]||''; });
         // Load tiered criteria
         try { pol.co.tiers = row['co_tiers'] ? JSON.parse(row['co_tiers']) : []; } catch(e) { pol.co.tiers = []; }
@@ -1919,7 +1945,7 @@ async function saveFIPolicyToSheet(fiName, productKey) {
   const pol = (state.fiPolicy[fiName]||{})[productKey]||{};
   const row = { financier: fiName, productKey,
     ind_applicable: String(!!pol.ind_applicable), co_applicable: String(!!pol.co_applicable) };
-  ['minCibil','maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','flexibility','remarks'].forEach(k => { row['ind_'+k] = (pol.ind||{})[k]||''; });
+  ['minCibil','maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','existingCvRequired','existingCvCount','existingCvType','flexibility','remarks'].forEach(k => { row['ind_'+k] = (pol.ind||{})[k]||''; });
   ['maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','vintage','itr','flexibility','remarks'].forEach(k => { row['co_'+k] = (pol.co||{})[k]||''; });
   // Save tiers as JSON string
   row['co_tiers'] = JSON.stringify((pol.co||{}).tiers||[]);
@@ -3152,12 +3178,12 @@ const FIP_SEGMENTS = ['ind', 'co'];
 
 // Field keys for each segment — used for save/load/clear
 const FIP_SEG_FIELDS = {
-  ind: ['minCibil','maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','flexibility','remarks'],
+  ind: ['minCibil','maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','existingCvRequired','existingCvCount','existingCvType','flexibility','remarks'],
   co:  ['maxTenure','loanOn','loanAmtType','maxLoan','maxLoanPct','minIrr','vintage','itr','flexibility','remarks']
 };
 
 // Fields that are toggle yes/no (stored as 'Yes'/'No')
-const FIP_TOGGLE_FIELDS = { ind: ['ntc','ftu','ftb'], co: ['itr'] };
+const FIP_TOGGLE_FIELDS = { ind: ['ntc','ftu','ftb','existingCvRequired'], co: ['itr'] };
 
 // INR display fields
 const FIP_INR_FIELDS = { ind: ['maxLoan'], co: ['maxLoan'] }; // maxLoanPct handled separately
@@ -3167,7 +3193,7 @@ const FIP_PCT_FIELDS = { ind: ['minIrr'], co: ['minIrr'] };
 
 // Mandatory fields per segment (all except remarks)
 const FIP_MANDATORY = {
-  ind: ['minCibil','maxTenure','loanOn','loanAmtType','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','flexibility'],
+  ind: ['minCibil','maxTenure','loanOn','loanAmtType','minIrr','residence','guarantor','bankStatement','licenseType','ntc','ftu','ftb','existingCvRequired','flexibility'],
   co:  ['maxTenure','loanOn','loanAmtType','minIrr','vintage','ntc','itr','flexibility']
 };
 const FIP_CONDITIONAL_MANDATORY = {}; // tiered criteria handled separately
@@ -3288,6 +3314,35 @@ function formatPCT(val) {
   return val + '%';
 }
 
+function validateExistingCvEv(el) {
+  var countEl = document.getElementById('fip_ind_existingCvCount');
+  if (!countEl || !countEl.value || !el.value) return;
+  var total = parseInt(countEl.value);
+  var ev    = parseInt(el.value);
+  if (ev > total) {
+    el.style.borderColor = 'var(--flag)';
+    toast('⚠ Min. EV CVs (' + ev + ') cannot exceed Min. Total CVs (' + total + ').');
+  } else {
+    el.style.borderColor = '';
+  }
+}
+
+function updateExistingCvPanel(seg) {
+  if (seg !== 'ind') return;
+  var isYes = getFIPYNValue('fip_ind_existingCvRequired') === 'Yes';
+  var panel = document.getElementById('fip_ind_existingCvDetails');
+  if (panel) panel.style.display = isYes ? '' : 'none';
+  // In edit mode, show inputs; in view mode, show view divs
+  var saveBtn = document.getElementById('fip_ind_saveBtn');
+  var inEditMode = saveBtn && saveBtn.style.display !== 'none';
+  ['existingCvCount','existingCvType'].forEach(function(k) {
+    var viewEl = document.getElementById('fip_ind_'+k+'_view');
+    var editEl = document.getElementById('fip_ind_'+k);
+    if (viewEl) viewEl.style.display = (inEditMode ? 'none' : '');
+    if (editEl) editEl.style.display = (inEditMode ? '' : 'none');
+  });
+}
+
 function toggleFIPYN(fid) {
   // Determine which segment this toggle belongs to
   var seg = fid.indexOf('_ind_') > -1 ? 'ind' : 'co';
@@ -3303,12 +3358,11 @@ function toggleFIPYN(fid) {
   if (!isYes) {
     label.textContent = 'Yes'; label.style.color = 'var(--ok)';
     track.style.background = 'var(--ok)'; thumb.style.left = '18px';
-    // Show fleet size field if existingFleet
-
+    if (fid === 'fip_ind_existingCvRequired') updateExistingCvPanel('ind');
   } else {
     label.textContent = 'No'; label.style.color = 'var(--cat-d)';
     track.style.background = '#ddd'; thumb.style.left = '2px';
-
+    if (fid === 'fip_ind_existingCvRequired') updateExistingCvPanel('ind');
   }
 }
 
@@ -3607,6 +3661,10 @@ function openFIPolicyModal(fiName, productKey, productLabel) {
     if (saveBtn) saveBtn.style.display = 'none';
     // Init loan amount fields
     setLoanAmtFields(seg, data);
+    // Init CV panel for ind
+    if (seg === 'ind') {
+      setTimeout(function(){ updateExistingCvPanel('ind'); }, 10);
+    }
     // Init tiers for co
     if (seg === 'co') {
       _fipTiers = JSON.parse(JSON.stringify((data.tiers && data.tiers.length) ? data.tiers : []));
@@ -3688,6 +3746,7 @@ function enterFIPSegmentEditMode(seg) {
   if (seg === 'co') enterFIPTierEditMode();
   // Enable geo section in edit mode
   setGeoSectionEditable(seg, true);
+  if (seg === 'ind') updateExistingCvPanel('ind');
   // Show loan amount fields in edit mode
   var loanOnEl = document.getElementById('fip_' + seg + '_loanOn');
   if (loanOnEl) loanOnEl.style.display = '';
@@ -3788,6 +3847,23 @@ const FIP_FIELD_LABELS = {
 };
 
 function saveFIPSegment(seg) {
+  // Extra validation: if existingCvRequired = Yes, count and type must be filled
+  if (seg === 'ind' && getFIPYNValue('fip_ind_existingCvRequired') === 'Yes') {
+    var countEl = document.getElementById('fip_ind_existingCvCount');
+    var typeEl  = document.getElementById('fip_ind_existingCvType');
+    if (countEl && (!countEl.value || parseInt(countEl.value) < 1)) {
+      toast('⚠ Min. CVs Owned is required when Existing CV Required = Yes.');
+      countEl.focus(); return;
+    }
+    if (typeEl && (typeEl.value === '' || typeEl.value === null)) {
+      toast('⚠ Min. EV CVs is required when Existing CV Required = Yes (enter 0 if no EV requirement).');
+      typeEl.focus(); return;
+    }
+    if (countEl && typeEl && parseInt(typeEl.value) > parseInt(countEl.value)) {
+      toast('⚠ Min. EV CVs (' + typeEl.value + ') cannot exceed Min. Total CVs (' + countEl.value + ').');
+      typeEl.focus(); return;
+    }
+  }
   var missing = fipSegmentMandatoryCheck(seg);
   if (missing) {
     toast('⚠ Fill mandatory fields: ' + missing.map(function(k){ return FIP_FIELD_LABELS[k]||k; }).join(', '));
@@ -4245,7 +4321,7 @@ function exportFIPolicy() {
   const headers = ["Financier","Product",
     "Ind Applicable","Ind Min CIBIL","Ind Max Tenure","Ind Loan On","Ind Loan Amt Type","Ind Max Loan (₹)","Ind Max Loan (%)","Ind Min IRR",
     "Ind Residence","Ind Guarantor","Ind Bank Statement",
-    "Ind License Type","Ind NTC","Ind FTU","Ind FTB","Ind Flexibility","Ind Remarks",
+    "Ind License Type","Ind NTC","Ind FTU","Ind FTB","Ind Existing CV Required","Ind Min Total CVs","Ind Min EV CVs","Ind Flexibility","Ind Remarks",
     "CO Applicable","CO Max Tenure","CO Loan On","CO Loan Amt Type","CO Max Loan (₹)","CO Max Loan (%)","CO Min IRR",
     "CO Vintage","CO ITR Filed","CO Flexibility","CO Turnover/Fleet Tiers","CO Remarks"];
   const rows = [headers];
@@ -4258,7 +4334,7 @@ function exportFIPolicy() {
         pol.ind_applicable?"Yes":"No",
         i.minCibil||"", i.maxTenure||"", i.loanOn||"", i.loanAmtType||"", i.maxLoan||"", i.maxLoanPct||"", i.minIrr||"",
         i.residence||"", i.guarantor||"",
-        i.bankStatement||"", i.licenseType||"", i.ntc||"", i.ftu||"", i.ftb||"", i.flexibility||"", i.remarks||"",
+        i.bankStatement||"", i.licenseType||"", i.ntc||"", i.ftu||"", i.ftb||"", i.existingCvRequired||"No", i.existingCvCount||"", i.existingCvType||"", i.flexibility||"", i.remarks||"",
         pol.co_applicable?"Yes":"No",
         c.maxTenure||"", c.loanOn||"", c.loanAmtType||"", c.maxLoan||"", c.maxLoanPct||"", c.minIrr||"",
         c.vintage||"", c.itr||"", c.flexibility||"", JSON.stringify((c.tiers||[])), c.remarks||""
