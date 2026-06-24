@@ -2855,25 +2855,27 @@ function closeFinancierMasterModal() {
   editingFinancierName = null;
 }
 
-function saveFinancierMaster() {
+ function saveFinancierMaster() {
   const name = document.getElementById("fm_name").value.trim();
   const category    = document.getElementById("fm_category").value.trim();
   const status      = document.getElementById("fm_status").value.trim();
   const mouStatus   = document.getElementById("fm_mouStatus").value.trim();
   const instruments = document.getElementById("fm_instruments").value.trim();
 
-  if (!name)        { toast("⚠ Financier name is required.");  document.getElementById("fm_name").focus();        return; }
-  if (!category)    { toast("⚠ Category is required.");        document.getElementById("fm_category").focus();    return; }
-  // Check at least one product selected
-  const anyProduct = document.getElementById("fm_3wc").checked ||
-    document.getElementById("fm_3wp").checked ||
-    document.getElementById("fm_4wc").checked ||
-    document.getElementById("fm_4wct").checked;
-  if (!anyProduct) { toast("⚠ Please select at least one product."); return; }
+  if (!name)   { toast("⚠ Financier name is required.");  document.getElementById("fm_name").focus(); return; }
+  if (!status) { toast("⚠ Status is required.");          document.getElementById("fm_status").focus(); return; }
 
-  if (!instruments) { toast("⚠ Instruments is required.");     document.getElementById("fm_instruments").focus(); return; }
-  if (!status)      { toast("⚠ Status is required.");          document.getElementById("fm_status").focus();      return; }
-  if (!mouStatus)   { toast("⚠ MoU Status is required.");      document.getElementById("fm_mouStatus").focus();   return; }
+  // Skip remaining mandatory checks if status is Suspended
+  if (status !== 'Suspended') {
+    if (!category)    { toast("⚠ Category is required.");        document.getElementById("fm_category").focus();    return; }
+    const anyProduct = document.getElementById("fm_3wc").checked ||
+      document.getElementById("fm_3wp").checked ||
+      document.getElementById("fm_4wc").checked ||
+      document.getElementById("fm_4wct").checked;
+    if (!anyProduct) { toast("⚠ Please select at least one product."); return; }
+    if (!instruments) { toast("⚠ Instruments is required.");     document.getElementById("fm_instruments").focus(); return; }
+    if (!mouStatus)   { toast("⚠ MoU Status is required.");      document.getElementById("fm_mouStatus").focus();   return; }
+  }
 
   // Collect all fields
   const record = {};
@@ -3617,6 +3619,23 @@ function openFIPolicyModal(fiName, productKey, productLabel) {
   document.getElementById('fiPolicyModalTitle').textContent = fiName;
   document.getElementById('fiPolicyModalSub').textContent = 'Product: ' + productLabel;
   var pol = getFIPolicy(fiName, productKey) || {};
+
+  // ── Auto-copy 4WCS → 4WCT if 4WCT has no data yet ──
+  if (productKey === '4wc_turbo') {
+    var has4wct = pol.ind_applicable || pol.co_applicable ||
+                  Object.keys(pol.ind||{}).some(function(k){ return (pol.ind[k]||'') !== ''; }) ||
+                  Object.keys(pol.co||{}).some(function(k){ return (pol.co[k]||'') !== ''; });
+    if (!has4wct) {
+      var storm = getFIPolicy(fiName, '4wc_storm') || {};
+      if (storm.ind_applicable || storm.co_applicable) {
+        pol = JSON.parse(JSON.stringify(storm));
+        // Show a notice
+        setTimeout(function(){
+          toast('ℹ 4WCT policy pre-filled from 4WCS. Review and save to confirm.');
+        }, 400);
+      }
+    }
+  }
 
   FIP_SEGMENTS.forEach(function(seg) {
     var applicable = !!pol[seg + '_applicable'];
