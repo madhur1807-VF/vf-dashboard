@@ -1049,14 +1049,20 @@
 
       <!-- ── INDIVIDUAL PANEL ── -->
       <div id="fip_panel_ind">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surface2);border-bottom:1px solid var(--border);">
-          <span style="font-size:12px;color:var(--text-muted);">Applicable for Individual customers?</span>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surface2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:12px;color:var(--text-muted);">Applicable for Individual customers?</span>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
             <div id="fip_ind_toggleLabel" style="font-size:11px;font-weight:600;color:var(--cat-d);">Not Applicable</div>
             <div id="fip_ind_toggleTrack" onclick="toggleFIPolicySegment('ind')" style="width:40px;height:22px;border-radius:11px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
               <div id="fip_ind_toggleThumb" style="width:18px;height:18px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
             </div>
           </label>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" id="fip_ind_editBtn_top" onclick="enterFIPSegmentEditMode('ind')" style="display:none;">✏ Edit</button>
+            <button class="btn btn-primary btn-sm" id="fip_ind_saveBtn_top" onclick="saveFIPSegment('ind')" style="display:none;">💾 Save Changes</button>
+          </div>
         </div>
         <div id="fip_ind_body" style="padding:16px 20px;opacity:0.4;pointer-events:none;">
           <div id="fip_ind_hint" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px dashed var(--border);border-radius:8px;margin-bottom:14px;font-size:12px;color:var(--text-muted);">
@@ -1251,23 +1257,26 @@
             <div id="fip_ind_remarks_view" class="fip-view-field" style="min-height:40px;">—</div>
             <textarea class="form-select" id="fip_ind_remarks" rows="2" style="display:none;resize:vertical;" placeholder="Optional notes..."></textarea>
           </div>
-          <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:4px;">
-            <button class="btn btn-secondary btn-sm" id="fip_ind_editBtn" onclick="enterFIPSegmentEditMode('ind')" style="display:none;">✏ Edit</button>
-            <button class="btn btn-primary btn-sm" id="fip_ind_saveBtn" onclick="saveFIPSegment('ind')" style="display:none;">Save Changes</button>
-          </div>
+          <!-- Edit/Save buttons moved to top -->
         </div>
       </div>
 
       <!-- ── COMPANY OWNED PANEL ── -->
       <div id="fip_panel_co" style="display:none;">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surface2);border-bottom:1px solid var(--border);">
-          <span style="font-size:12px;color:var(--text-muted);">Applicable for Company Owned customers?</span>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surface2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:12px;color:var(--text-muted);">Applicable for Company Owned customers?</span>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
             <div id="fip_co_toggleLabel" style="font-size:11px;font-weight:600;color:var(--cat-d);">Not Applicable</div>
             <div id="fip_co_toggleTrack" onclick="toggleFIPolicySegment('co')" style="width:40px;height:22px;border-radius:11px;background:#ddd;position:relative;cursor:pointer;transition:background 0.2s;">
               <div id="fip_co_toggleThumb" style="width:18px;height:18px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
             </div>
           </label>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" id="fip_co_editBtn_top" onclick="enterFIPSegmentEditMode('co')" style="display:none;">✏ Edit</button>
+            <button class="btn btn-primary btn-sm" id="fip_co_saveBtn_top" onclick="saveFIPSegment('co')" style="display:none;">💾 Save Changes</button>
+          </div>
         </div>
         <div id="fip_co_body" style="padding:16px 20px;opacity:0.4;pointer-events:none;">
           <div id="fip_co_hint" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px dashed var(--border);border-radius:8px;margin-bottom:14px;font-size:12px;color:var(--text-muted);">
@@ -1426,10 +1435,7 @@
             <div id="fip_co_remarks_view" class="fip-view-field" style="min-height:40px;">—</div>
             <textarea class="form-select" id="fip_co_remarks" rows="2" style="display:none;resize:vertical;" placeholder="Optional notes..."></textarea>
           </div>
-          <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:4px;">
-            <button class="btn btn-secondary btn-sm" id="fip_co_editBtn" onclick="enterFIPSegmentEditMode('co')" style="display:none;">✏ Edit</button>
-            <button class="btn btn-primary btn-sm" id="fip_co_saveBtn" onclick="saveFIPSegment('co')" style="display:none;">Save Changes</button>
-          </div>
+          <!-- Edit/Save buttons moved to top -->
         </div>
       </div>
 
@@ -3265,12 +3271,28 @@ function renderFIPolicy() {
       return '<button class="fip-product-btn '+cls+'" onclick="openFIPolicyModal(\''+escJs(f.name)+'\',\''+p.key+'\',\''+escJs(p.label)+'\')">'+ icon +' '+ p.label +'</button>';
     }).join("");
     if (!productBtns.trim()) productBtns = '<span style="font-size:11px;color:var(--text-hint);">No products in FI Master</span>';
+    // Count dealers linked to this FI
+    var linkedDealers = state.addedDealers.filter(function(d){
+      return getDealerFinanciers(d.dealer, d.location||'')[f.name];
+    });
+    var linkedCount = linkedDealers.length;
+    var dealerTip = linkedCount ?
+      linkedDealers.map(function(d){ return escHtml(d.dealer) + (d.location ? ' (' + escHtml(d.location) + ')' : ''); }).join('<br>') :
+      '<span style="color:var(--text-hint);">None mapped</span>';
+    var tipId = 'fip_tip_' + idx;
+    var dealerCell = '<div style="position:relative;display:inline-block;">' +
+      '<span class="badge badge-count" style="'+(linkedCount ? 'background:var(--cat-b-bg);color:var(--cat-b);border:1px solid var(--cat-b-border);cursor:pointer;' : 'cursor:default;')+'" '+
+      (linkedCount ? 'onmouseenter="document.getElementById(\'' + tipId + '\').style.display=\'block\'" onmouseleave="document.getElementById(\'' + tipId + '\').style.display=\'none\'"' : '') +
+      '>'+linkedCount+' dealer'+(linkedCount!==1?'s':'')+'</span>' +
+      (linkedCount ? '<div id="'+tipId+'" style="display:none;position:absolute;left:0;top:100%;margin-top:4px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:11px;line-height:1.8;white-space:nowrap;z-index:99;box-shadow:var(--shadow-md);">'+dealerTip+'</div>' : '') +
+      '</div>';
     return '<tr>'+
       '<td style="text-align:center;font-size:12px;color:var(--text-muted);">'+(idx+1)+'</td>'+
       '<td style="font-weight:600;font-size:13px;white-space:nowrap;">'+escHtml(f.name)+'</td>'+
       '<td><span class="badge badge-count">'+escHtml(f.meta.category||"—")+'</span></td>'+
       '<td><span class="badge" style="'+(f.meta.status==="Active"||f.meta.status==="Onboarded"?"background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-border);":"background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);")+'">'+(f.meta.status||"—")+'</span></td>'+
       '<td><div style="display:flex;gap:6px;flex-wrap:wrap;">'+productBtns+'</div></td>'+
+      '<td>'+dealerCell+'</td>'+
     '</tr>';
   }).join("");
 
@@ -3279,6 +3301,7 @@ function renderFIPolicy() {
     '<th style="width:44px;text-align:center;">S.No</th>'+
     '<th style="min-width:180px;">Financier</th><th>Category</th><th>Status</th>'+
     '<th style="min-width:320px;">Product Policies</th>'+
+    '<th style="min-width:100px;">Dealer Links</th>'+
     '</tr></thead><tbody>'+rows+'</tbody></table>'+
     '<div style="margin-top:10px;font-size:11px;color:var(--text-hint);display:flex;gap:16px;">'+
     '<span><span class="fip-product-btn defined" style="pointer-events:none;">✓ Label</span> Both segments defined</span>'+
@@ -3335,7 +3358,7 @@ function updateExistingCvPanel(seg) {
   var panel = document.getElementById('fip_ind_existingCvDetails');
   if (panel) panel.style.display = isYes ? '' : 'none';
   // In edit mode, show inputs; in view mode, show view divs
-  var saveBtn = document.getElementById('fip_ind_saveBtn');
+  var saveBtn = document.getElementById('fip_ind_saveBtn_top');
   var inEditMode = saveBtn && saveBtn.style.display !== 'none';
   ['existingCvCount','existingCvType'].forEach(function(k) {
     var viewEl = document.getElementById('fip_ind_'+k+'_view');
@@ -3348,7 +3371,7 @@ function updateExistingCvPanel(seg) {
 function toggleFIPYN(fid) {
   // Determine which segment this toggle belongs to
   var seg = fid.indexOf('_ind_') > -1 ? 'ind' : 'co';
-  var saveBtn = document.getElementById('fip_' + seg + '_saveBtn');
+  var saveBtn = document.getElementById('fip_' + seg + '_saveBtn_top');
   var inEditMode = saveBtn && saveBtn.style.display !== 'none';
   if (!inEditMode) return; // block toggle if not in edit mode
 
@@ -3403,8 +3426,8 @@ function setFIPSegmentToggle(seg, applicable) {
   var thumb   = document.getElementById('fip_' + seg + '_toggleThumb');
   var label   = document.getElementById('fip_' + seg + '_toggleLabel');
   var body    = document.getElementById('fip_' + seg + '_body');
-  var editBtn = document.getElementById('fip_' + seg + '_editBtn');
-  var saveBtn = document.getElementById('fip_' + seg + '_saveBtn');
+  var editBtn = document.getElementById('fip_' + seg + '_editBtn_top');
+  var saveBtn = document.getElementById('fip_' + seg + '_saveBtn_top');
   var hint    = document.getElementById('fip_' + seg + '_hint');
 
   if (applicable) {
@@ -3674,8 +3697,8 @@ function openFIPolicyModal(fiName, productKey, productLabel) {
       }
     });
 
-    var editBtn = document.getElementById('fip_' + seg + '_editBtn');
-    var saveBtn = document.getElementById('fip_' + seg + '_saveBtn');
+    var editBtn = document.getElementById('fip_' + seg + '_editBtn_top');
+    var saveBtn = document.getElementById('fip_' + seg + '_saveBtn_top');
     if (editBtn) editBtn.style.display = applicable ? '' : 'none';
     if (saveBtn) saveBtn.style.display = 'none';
     // Init loan amount fields
@@ -3758,8 +3781,8 @@ function enterFIPSegmentEditMode(seg) {
       if (vEl) vEl.style.display = 'none';
     }
   });
-  var editBtn = document.getElementById('fip_' + seg + '_editBtn');
-  var saveBtn = document.getElementById('fip_' + seg + '_saveBtn');
+  var editBtn = document.getElementById('fip_' + seg + '_editBtn_top');
+  var saveBtn = document.getElementById('fip_' + seg + '_saveBtn_top');
   if (editBtn) editBtn.style.display = 'none';
   if (saveBtn) saveBtn.style.display = '';
   if (seg === 'co') enterFIPTierEditMode();
@@ -3804,8 +3827,8 @@ function enterFIPSegmentViewMode(seg) {
       if (vEl) vEl.style.display = '';
     }
   });
-  var editBtn = document.getElementById('fip_' + seg + '_editBtn');
-  var saveBtn = document.getElementById('fip_' + seg + '_saveBtn');
+  var editBtn = document.getElementById('fip_' + seg + '_editBtn_top');
+  var saveBtn = document.getElementById('fip_' + seg + '_saveBtn_top');
   if (editBtn) editBtn.style.display = '';
   if (saveBtn) saveBtn.style.display = 'none';
   if (seg === 'co') exitFIPTierEditMode(_fipTiers);
@@ -3833,7 +3856,7 @@ function enterFIPSegmentViewMode(seg) {
 function fipSegmentMandatoryCheck(seg) {
   var label = document.getElementById('fip_' + seg + '_toggleLabel');
   if (!label || label.textContent !== 'Applicable') return null;
-  var inEditMode = document.getElementById('fip_' + seg + '_saveBtn').style.display !== 'none';
+  var inEditMode = document.getElementById('fip_' + seg + '_saveBtn_top').style.display !== 'none';
   var mandatoryKeys = (FIP_MANDATORY[seg] || []).slice();
 
   // Add conditional mandatory fields
