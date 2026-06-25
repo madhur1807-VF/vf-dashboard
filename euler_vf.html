@@ -3234,15 +3234,27 @@ function renderFIPolicy() {
     .slice().sort(function(a,b){ return a.localeCompare(b); })
     .map(function(name){ return { name:name, meta: state.financiersMeta.find(function(m){ return m.name===name; }) || {name:name} }; })
     .filter(function(f){
+      if ((f.meta.status||'').trim() === 'Suspended') {
+        console.log('[FIPolicy] Excluding suspended FI:', f.name, '| status:', f.meta.status);
+        return false;
+      }
       if (search  && !f.name.toLowerCase().includes(search)) return false;
       if (fCat    && (f.meta.category||"") !== fCat)         return false;
       if (fStatus && (f.meta.status||"")   !== fStatus)      return false;
       return true;
     });
 
+  var suspendedCount = state.financiers.filter(function(name){
+    var meta = state.financiersMeta.find(function(m){ return m.name===name; })||{};
+    return (meta.status||'').trim() === 'Suspended';
+  }).length;
+  var totalActive = state.financiers.length - suspendedCount;
+
   document.getElementById("fiPolicySummary").innerHTML =
-    '<div class="sum-card"><div class="sum-label">Total FIs</div><div class="sum-value">'+state.financiers.length+'</div><div class="sum-sub">in master list</div></div>' +
-    '<div class="sum-card"><div class="sum-label">Products</div><div class="sum-value">'+PRODUCTS.length+'</div><div class="sum-sub">'+PRODUCTS.map(function(p){return p.label;}).join(", ")+'</div></div>';
+    '<div class="sum-card"><div class="sum-label">Showing</div><div class="sum-value">'+filtered.length+'</div><div class="sum-sub">FIs (excl. suspended)</div></div>' +
+    '<div class="sum-card"><div class="sum-label">Total in Master</div><div class="sum-value">'+state.financiers.length+'</div><div class="sum-sub">'+(suspendedCount?'<span style="color:#f87171;">'+suspendedCount+' suspended</span>':'all active')+'</div></div>' +
+    '<div class="sum-card"><div class="sum-label">Products</div><div class="sum-value">'+PRODUCTS.length+'</div><div class="sum-sub">'+PRODUCTS.map(function(p){return p.label;}).join(", ")+'</div></div>' +
+    (suspendedCount ? '' : '');
 
   if (!filtered.length) {
     document.getElementById("fiPolicyTable").innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div>No financiers match your filters.</div></div>';
