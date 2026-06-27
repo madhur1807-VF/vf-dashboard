@@ -1016,6 +1016,11 @@
     <input type="text" class="search-box" id="fiPolicySearch" placeholder="Search financier..." oninput="renderFIPolicy()" style="width:200px;">
     <select class="filter-select" id="fiPolicyFilterCategory" onchange="renderFIPolicy()"><option value="">All Categories</option></select>
     <select class="filter-select" id="fiPolicyFilterStatus" onchange="renderFIPolicy()"><option value="">All Statuses</option></select>
+    <select class="filter-select" id="fiPolicyFilterLinked" onchange="renderFIPolicy()">
+      <option value="">All (Linked &amp; Unlinked)</option>
+      <option value="linked">Linked with Dealer</option>
+      <option value="unlinked">Not Linked</option>
+    </select>
     <button class="btn btn-secondary btn-sm" onclick="clearFIPolicyFilters()">✕ Clear</button>
     <button class="btn btn-secondary btn-sm" onclick="exportFIPolicy()">⬇ Export Excel</button>
   </div>
@@ -3217,6 +3222,7 @@ function clearFIPolicyFilters() {
   document.getElementById("fiPolicySearch").value = "";
   document.getElementById("fiPolicyFilterCategory").value = "";
   document.getElementById("fiPolicyFilterStatus").value = "";
+  var lSel = document.getElementById("fiPolicyFilterLinked"); if (lSel) lSel.value = "";
   renderFIPolicy();
 }
 
@@ -3229,17 +3235,22 @@ function renderFIPolicy() {
   var search  = (document.getElementById("fiPolicySearch").value || "").toLowerCase();
   var fCat    = document.getElementById("fiPolicyFilterCategory").value;
   var fStatus = document.getElementById("fiPolicyFilterStatus").value;
+  var fLinked = document.getElementById("fiPolicyFilterLinked") ? document.getElementById("fiPolicyFilterLinked").value : "";
 
   var filtered = state.financiers
     .slice().sort(function(a,b){ return a.localeCompare(b); })
     .map(function(name){ return { name:name, meta: state.financiersMeta.find(function(m){ return m.name===name; }) || {name:name} }; })
     .filter(function(f){
-      if ((f.meta.status||'').trim() === 'Suspended') {
-        console.log('[FIPolicy] Excluding suspended FI:', f.name, '| status:', f.meta.status);
-        return false;
-      }
+      if ((f.meta.status||'').trim() === 'Suspended') return false;
       if (search  && !f.name.toLowerCase().includes(search)) return false;
       if (fCat    && (f.meta.category||"") !== fCat)         return false;
+      if (fLinked) {
+        var isLinked = state.addedDealers.some(function(d){
+          return getDealerFinanciers(d.dealer, d.location||'')[f.name];
+        });
+        if (fLinked === 'linked'   && !isLinked) return false;
+        if (fLinked === 'unlinked' &&  isLinked) return false;
+      }
       if (fStatus && (f.meta.status||"")   !== fStatus)      return false;
       return true;
     });
